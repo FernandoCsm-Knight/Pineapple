@@ -14,8 +14,13 @@
 
 // Layers
 
+#include "layer/convolutional_layer.hpp"
+#include "layer/batch_normalization.hpp"
 #include "layer/flatten_layer.hpp"
 #include "layer/linear_layer.hpp"
+#include "layer/max_pooling.hpp"
+#include "layer/min_pooling.hpp"
+#include "layer/avg_pooling.hpp"
 #include "layer/sequential.hpp"
 
 // Optimizers
