@@ -1,5 +1,8 @@
 # Pineapple
-A machine learning framework in c++
+
+Version 0.1.0
+
+A machine learning framework in c++ 
 
 Shield: [![CC BY-NC 4.0][cc-by-nc-shield]][cc-by-nc]
 
