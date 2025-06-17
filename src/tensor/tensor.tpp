@@ -228,7 +228,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
         Shape result_shape;
         for(int i = 0; i < this->ndim(); ++i) {
             if(i == axis) {
-                if (keep_dimension) result_shape.add_dimension(1);
+                if(keep_dimension) result_shape.add_dimension(1);
             } else {
                 result_shape.add_dimension(this->shape()[i]);
             }

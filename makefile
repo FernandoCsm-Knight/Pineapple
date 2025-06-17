@@ -71,7 +71,7 @@ time: build
 	time -f %E ./$(BIN_FILE)
 
 # Rerun completo
-rerun: clean build run
+rerun: clean time
 
 # Valgrind
 valgrind: build

@@ -7,7 +7,7 @@ int main() {
     const float LEARNING_RATE = 0.001f;
     const int EPOCHS = 1000;
     const int BATCH_SIZE = 32;
-
+    
     auto [features, labels] = pineapple::create_zebra<float>(NUM_SAMPLES, NUM_CLASSES);
 
     Partition<float> partition = Partition<float>(features, labels, false);
@@ -27,7 +27,7 @@ int main() {
             layer1, relu1,
             layer2, relu2,
             layer3, softmax
-        }),
+        }), 
         new CrossEntropyLoss<float>()
     );
 

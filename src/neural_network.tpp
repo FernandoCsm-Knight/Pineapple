@@ -38,7 +38,7 @@ Tensor<T> NeuralNetwork<T>::forward(const Tensor<T>& input) {
 }
 
 template <Numeric T>
-void NeuralNetwork<T>::backward(const Tensor<T>& input, const Tensor<T>& targets, const Tensor<T>& predictions) {
+void NeuralNetwork<T>::backward(const Tensor<T>& targets, const Tensor<T>& predictions) {
     Tensor<T> loss_grad = loss_function->gradient(predictions, targets);
     model->backward(loss_grad);
 }
@@ -47,7 +47,7 @@ template <Numeric T>
 void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size) {
     BatchLoader<T> loader(X, y, batch_size, true);
     
-    for (int epoch = 0; epoch < epochs; ++epoch) {        
+    for(int epoch = 0; epoch < epochs; ++epoch) {
         T total_loss = 0;
         
         for(const auto& [batch_X, batch_y] : loader) {
@@ -68,14 +68,11 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
 template <Numeric T>
 T NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
     Tensor<T> predictions = forward(X).argmax(1);
-
-    Tensor<T> correct = predictions == y;
+    Tensor<bool> correct = predictions == y;
 
     T sum = 0;
-    for(size_t i = 0; i < correct.length(); ++i) {
-        if(correct[i]) {
-            sum += 1;
-        }
+    for(const bool& el : correct) {
+        if(el) sum += 1;
     }
 
     return sum / correct.length();

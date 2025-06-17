@@ -54,15 +54,16 @@ void Partition<T>::random_seed(int seed) {
 }
 
 template <Numeric T>
-std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_split(const Tensor<T>& stratify, float train_ratio, float test_ratio) {
-    if(train_ratio + test_ratio > 1.0f) {
-        throw std::invalid_argument("Train and test ratios must sum to 1 or less");
+std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_split(const Tensor<T>& stratify, float test_ratio) {
+    if(test_ratio > 1.0f) {
+        throw std::invalid_argument("Test ratio must be 1 or less");
     }
 
     if(stratify.shape(0) != samples_count) {
         throw std::invalid_argument("Stratify tensor must have the same number of samples as data and target");
     }
 
+    const float train_ratio = 1.0f - test_ratio;
     const auto [train_data_shape, train_target_shape, test_data_shape, test_target_shape] = split_shape(train_ratio, test_ratio, data.shape(), target.shape());
 
     Tensor<T> train_data(train_data_shape);
@@ -78,7 +79,6 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_
     int train_index = 0;
     int test_index = 0;
 
-    #pragma omp parallel for
     for(size_t key = 0; key < stratified_indices.size(); ++key) {
         const std::vector<int>& indices = stratified_indices.at(key);
 
@@ -89,22 +89,16 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_
         const int test_slice = static_cast<int>(test_ratio * indices.size());
 
         for(int i = 0; i < train_slice; ++i) {
-            int idx = shuffled_indices[i];
+            const int idx = shuffled_indices[i];
             
-            for(int j = 0; j < data.shape(1); ++j) {
-                train_data(train_index, j) = data(idx, j).value();
-            }
-
+            train_data(train_index) = data(idx);
             train_target[train_index++] = target[idx];
         }
 
         for(int i = 0; i < test_slice; ++i) {
-            int idx = shuffled_indices[train_slice + i];
+            const int idx = shuffled_indices[train_slice + i];
             
-            for(int j = 0; j < data.shape(1); ++j) {
-                test_data(test_index, j) = data(idx, j).value();
-            }
-
+            test_data(test_index) = data(idx);
             test_target[test_index++] = target[idx];
         }
     }
@@ -113,11 +107,12 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_
 }
 
 template <Numeric T>
-std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::split(float train_ratio, float test_ratio) {
-    if(train_ratio + test_ratio > 1.0f) {
-        throw std::invalid_argument("Train and test ratios must sum to 1 or less");
+std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::split(float test_ratio) {
+    if(test_ratio > 1.0f) {
+        throw std::invalid_argument("Test ratio must be 1 or less");
     }
 
+    const float train_ratio = 1.0f - test_ratio;
     const auto [train_data_shape, train_target_shape, test_data_shape, test_target_shape] = split_shape(train_ratio, test_ratio, data.shape(), target.shape());
 
     Tensor<T> train_data(train_data_shape);
@@ -130,25 +125,17 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::split(float
     const int train_count = static_cast<int>(train_ratio * samples_count);
     const int test_count = static_cast<int>(test_ratio * samples_count);
 
-    #pragma omp parallel for
     for(int i = 0; i < train_count; ++i) {
-        int idx = indices[i];
+        const int idx = indices[i];
 
-        for(int j = 0; j < data.shape(1); ++j) {
-            train_data(i, j) = data(idx, j).value();
-        }
-
+        train_data(i) = data(idx);
         train_target[i] = target[idx];
     }
 
-    #pragma omp parallel for
     for(int i = 0; i < test_count; ++i) {
-        int idx = indices[train_count + i];
+        const int idx = indices[train_count + i];
 
-        for(int j = 0; j < data.shape(1); ++j) {
-            test_data(i, j) = data(idx, j).value();
-        }
-
+        test_data(i) = data(idx);
         test_target[i] = target[idx];
     }
 

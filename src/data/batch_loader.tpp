@@ -67,10 +67,7 @@ std::pair<Tensor<T>, Tensor<T>> BatchLoader<T>::next() {
     for(int i = 0; i < curr_size; ++i) {
         const int idx = indices[start + i];
 
-        for(int j = 0; j < data.shape(1); ++j) {
-            batch_data(i, j) = data(idx, j).value();
-        }
-
+        batch_data(i) = data(idx);
         batch_target[i] = target[idx];
     }
 

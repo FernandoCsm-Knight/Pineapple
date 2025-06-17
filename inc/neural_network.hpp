@@ -24,7 +24,7 @@ template <Numeric T> class NeuralNetwork {
 
         Tensor<T> forward(const Tensor<T>& input);
         
-        void backward(const Tensor<T>& input, const Tensor<T>& targets, const Tensor<T>& predictions);
+        void backward(const Tensor<T>& targets, const Tensor<T>& predictions);
         
         void train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size = 32);
         

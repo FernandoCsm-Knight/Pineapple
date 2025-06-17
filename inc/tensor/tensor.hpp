@@ -80,7 +80,7 @@ template <Numeric T> class Tensor: public Shapeable {
         // Assingment operators
 
         Tensor<T>& operator=(const Tensor<T>& other);
-        Tensor<T>& operator=(Tensor<T>&& other) noexcept;
+        Tensor<T>& operator=(Tensor<T>&& other);
         Tensor<T>& operator=(const T& value);
 
         template <Numeric U>
@@ -259,11 +259,10 @@ template <Numeric T> class Tensor: public Shapeable {
 
         // Iterators
 
-        Iterator<T> begin();
-        Iterator<T> end();
-
-        Iterator<const T> begin() const;
-        Iterator<const T> end() const;
+        T* begin();
+        T* end();
+        const T* begin() const;
+        const T* end() const;
 
         // Formatted output
 
