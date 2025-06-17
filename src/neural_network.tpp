@@ -56,7 +56,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             T loss = loss_function->compute(predictions, batch_y);
             total_loss += loss;
             
-            backward(batch_X, batch_y, predictions);
+            backward(batch_y, predictions);
         }
         
         if ((epoch + 1) % 10 == 0 || epoch == 0) {

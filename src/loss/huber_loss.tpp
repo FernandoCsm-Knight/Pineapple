@@ -6,11 +6,11 @@
 template <Numeric T>
 T HuberLoss<T>::compute(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     T loss = 0;
-    int batch_size = predictions.shape(0);
+    const int batch_size = predictions.shape(0);
     
     #pragma omp parallel for reduction(+:loss)
     for(int i = 0; i < batch_size; ++i) {
-        T diff = std::abs(predictions(i, 0).value() - targets[i]);
+        const T diff = std::abs(predictions(i, 0).value() - targets[i]);
         
         if(diff < delta) {
             loss += 0.5 * diff * diff;
@@ -25,12 +25,12 @@ T HuberLoss<T>::compute(const Tensor<T>& predictions, const Tensor<T>& targets) 
 template <Numeric T>
 Tensor<T> HuberLoss<T>::gradient(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     Tensor<T> grad(predictions.shape());
-    int batch_size = predictions.shape(0);
+    const int batch_size = predictions.shape(0);
     
     #pragma omp parallel for
     for (int i = 0; i < batch_size; ++i) {
-        T diff = predictions(i, 0).value() - targets[i];
-        T abs_diff = std::abs(diff);
+        const T diff = predictions(i, 0).value() - targets[i];
+        const T abs_diff = std::abs(diff);
         
         if (abs_diff < delta) {
             grad(i, 0) = diff / batch_size;

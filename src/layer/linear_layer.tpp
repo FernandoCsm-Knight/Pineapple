@@ -41,7 +41,7 @@ Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
 template <Numeric T>
 Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
     Tensor<T> previous_grad = grad_weights.dot(weights.transpose());
-    int batch_size = grad_weights.shape(0);
+    const int batch_size = grad_weights.shape(0);
 
     optimizer->step(
         weights,

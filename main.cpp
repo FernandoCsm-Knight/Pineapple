@@ -1,5 +1,18 @@
 #include "inc/pineapple.hpp"
 
+// int main() {
+//     Tensor<float> tensor(3, 3);
+//     Tensor<float> other(3, 3);
+
+//     other.fill(1.0f);
+
+//     tensor(1) += other(1);
+
+//     std::cout << tensor << std::endl;
+//     std::cout << other << std::endl;
+//     return 0;
+// }
+
 int main() {
     const int NUM_SAMPLES = 1000;
     const int NUM_CLASSES = 2;

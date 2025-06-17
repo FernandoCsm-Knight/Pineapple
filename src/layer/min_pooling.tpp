@@ -22,12 +22,12 @@ MinPooling<T>::MinPooling(int kernel_size, int stride, int padding) {
 template <Numeric T>
 Tensor<T> MinPooling<T>::forward(const Tensor<T>& input) {
     this->input = input;
-    int channels = input.shape(0);
-    int height = input.shape(1);
-    int width = input.shape(2);
+    const int channels = input.shape(0);
+    const int height = input.shape(1);
+    const int width = input.shape(2);
 
-    int output_height = (height - kernel_size + 2 * padding) / stride + 1;
-    int output_width = (width - kernel_size + 2 * padding) / stride + 1;
+    const int output_height = (height - kernel_size + 2 * padding) / stride + 1;
+    const int output_width = (width - kernel_size + 2 * padding) / stride + 1;
 
     Shape output_shape{channels, output_height, output_width};
     min_indices = Tensor<T>(output_shape);
@@ -37,10 +37,10 @@ Tensor<T> MinPooling<T>::forward(const Tensor<T>& input) {
     for(int c = 0; c < channels; ++c) {
         for(int h = 0; h < output_height; ++h) {
             for(int w = 0; w < output_width; ++w) {
-                int h_start = std::max(0, h * stride - padding);
-                int h_end = std::min(h_start + kernel_size, height);
-                int w_start = std::max(0, w * stride - padding);
-                int w_end = std::min(w_start + kernel_size, width);
+                const int h_start = std::max(0, h * stride - padding);
+                const int h_end = std::min(h_start + kernel_size, height);
+                const int w_start = std::max(0, w * stride - padding);
+                const int w_end = std::min(w_start + kernel_size, width);
 
                 size_t min_idx = h_start * width + w_start;
                 T min_val = input(c, h_start, w_start).value();
@@ -76,7 +76,7 @@ Tensor<T> MinPooling<T>::backward(const Tensor<T>& grad_output) {
     for(int c = 0; c < grad_output.shape(0); ++c) {
         for(int h = 0; h < grad_output.shape(1); ++h) {
             for(int w = 0; w < grad_output.shape(2); ++w) {
-                size_t min_idx = min_indices(c, h, w).value();
+                const size_t min_idx = min_indices(c, h, w).value();
                 grad_input[min_idx] += grad_output(c, h, w).value();
             }
         }

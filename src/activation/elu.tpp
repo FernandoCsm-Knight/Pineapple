@@ -23,9 +23,7 @@ Tensor<T> ELU<T>::derivative(const Tensor<T>& input) const {
 
     #pragma omp parallel for
     for(size_t i = 0; i < input.length(); ++i) {
-        result[i] = (input[i] > static_cast<T>(0)) ? 
-                    static_cast<T>(1) : 
-                    alpha * std::exp(input[i]);
+        result[i] = (input[i] > static_cast<T>(0)) ? static_cast<T>(1) : alpha * std::exp(input[i]);
     }
 
     return result;

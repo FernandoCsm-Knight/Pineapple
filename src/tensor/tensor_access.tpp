@@ -6,8 +6,8 @@
 template <Numeric T>
 template <Integral... Indices>
 Tensor<T> Tensor<T>::operator()(Indices... indices) {
-    int dims = sizeof...(indices);
-    size_t offset = this->index(indices...);
+    const int dims = sizeof...(indices);
+    const size_t offset = this->index(indices...);
     
     Shape subview_shape;
     int* subview_stride = nullptr;
@@ -24,8 +24,8 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) {
 template <Numeric T>
 template <Integral... Indices>
 Tensor<T> Tensor<T>::operator()(Indices... indices) const {
-    int dims = sizeof...(indices);
-    size_t offset = this->index(indices...);
+    const int dims = sizeof...(indices);
+    const size_t offset = this->index(indices...);
     
     Shape subview_shape;
     int* subview_stride = nullptr;
@@ -42,12 +42,12 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) const {
 template <Numeric T>
 template <Integral... Indices>
 size_t Tensor<T>::index(Indices... indices) const {
-    int dims = sizeof...(indices);
+    const int dims = sizeof...(indices);
     if (dims > this->ndim()) {
         throw std::invalid_argument("Too many indices for tensor dimensions");
     }
     
-    int idx_array[] = { static_cast<int>(indices)... };
+    const int idx_array[] = { static_cast<int>(indices)... };
     
     size_t offset = 0;
     for(int i = 0; i < dims; ++i) {

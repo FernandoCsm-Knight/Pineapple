@@ -6,11 +6,11 @@
 template <Numeric T>
 T MSELoss<T>::compute(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     T loss = 0;
-    int batch_size = predictions.shape(0);
+    const int batch_size = predictions.shape(0);
     
     #pragma omp parallel for reduction(+:loss)
     for (int i = 0; i < batch_size; ++i) {
-        T diff = predictions(i, 0).value() - targets[i];
+        const T diff = predictions(i, 0).value() - targets[i];
         loss += diff * diff;
     }
     
@@ -20,7 +20,7 @@ T MSELoss<T>::compute(const Tensor<T>& predictions, const Tensor<T>& targets) co
 template <Numeric T>
 Tensor<T> MSELoss<T>::gradient(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     Tensor<T> grad(predictions.shape());
-    int batch_size = predictions.shape(0);
+    const int batch_size = predictions.shape(0);
     
     #pragma omp parallel for
     for(int i = 0; i < batch_size; ++i) {
