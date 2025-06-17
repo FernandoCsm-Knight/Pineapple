@@ -11,6 +11,8 @@ template <Numeric T> class Optimizer {
         Optimizer(T lr): learning_rate(lr) {}
         virtual ~Optimizer() = default;
 
+        virtual Optimizer<T>* copy() const = 0;
+
         virtual void step(
             Tensor<T>& weights, 
             const Tensor<T>& grad_weights, 

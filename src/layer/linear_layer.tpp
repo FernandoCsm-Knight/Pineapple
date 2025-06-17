@@ -6,8 +6,8 @@
 #include <random>
 
 template <Numeric T>
-LinearLayer<T>::LinearLayer(int in_features, int out_features, Optimizer<T>* optim)
-    : in_features(in_features), out_features(out_features), optimizer(optim) {
+LinearLayer<T>::LinearLayer(int in_features, int out_features)
+    : in_features(in_features), out_features(out_features) {
     
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -24,11 +24,6 @@ LinearLayer<T>::LinearLayer(int in_features, int out_features, Optimizer<T>* opt
 }
 
 template <Numeric T>
-LinearLayer<T>::~LinearLayer() {
-    delete optimizer;
-}
-
-template <Numeric T>
 Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
     if (input.shape(input.ndim() - 1) != in_features) {
         throw std::invalid_argument("Input features don't match layer's in_features");
@@ -40,10 +35,14 @@ Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
 
 template <Numeric T>
 Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
+    if(!this->optimizer) {
+        throw std::runtime_error("Optimizer not set for LinearLayer");
+    }
+
     Tensor<T> previous_grad = grad_weights.dot(weights.transpose());
     const int batch_size = grad_weights.shape(0);
 
-    optimizer->step(
+    this->optimizer->step(
         weights,
         last_input.transpose().dot(grad_weights), 
         bias,

@@ -26,6 +26,8 @@ template <Numeric T> class Sequential: public Layer<T> {
         bool length() const;
         bool empty() const;
 
+        void set_optimizer(Optimizer<T>* optim) override;
+
         Layer<T>** begin();
         Layer<T>** end();
         

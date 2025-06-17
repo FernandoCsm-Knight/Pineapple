@@ -20,6 +20,11 @@ bool Activation<T>::is_activation() const {
 }
 
 template <Numeric T>
+bool Activation<T>::is_optimization() const {
+    return false;
+}
+
+template <Numeric T>
 void Activation<T>::set_last_activation(bool is_last) {
     last_activation = is_last;
 }

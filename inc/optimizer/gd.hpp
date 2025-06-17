@@ -10,6 +10,8 @@ template <Numeric T> class GD: public Optimizer<T> {
     public:
         GD(T learning_rate, bool regression = false);
 
+        Optimizer<T>* copy() const override;
+
         void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) override;
 
         friend std::ostream& operator<<(std::ostream& os, const GD<T>& gd) {

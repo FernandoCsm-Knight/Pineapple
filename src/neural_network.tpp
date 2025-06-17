@@ -6,7 +6,7 @@
 // Construtor
 
 template <Numeric T>
-NeuralNetwork<T>::NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_function)
+NeuralNetwork<T>::NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_function, Optimizer<T>* optim)
     : model(model), loss_function(loss_function) {
 
     if(model == nullptr) {
@@ -17,9 +17,15 @@ NeuralNetwork<T>::NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_func
         throw std::invalid_argument("Loss function cannot be null");
     }
 
+    if(optim == nullptr) {
+        throw std::invalid_argument("Optimizer cannot be null");
+    }
+
     if(model->empty()) {
         throw std::invalid_argument("Model cannot be empty");
     }
+
+    model->set_optimizer(optim);
 }
 
 // Destructor

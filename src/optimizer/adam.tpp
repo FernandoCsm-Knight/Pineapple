@@ -21,6 +21,11 @@ Adam<T>::~Adam() {
 }
 
 template <Numeric T>
+Optimizer<T>* Adam<T>::copy() const {
+    return new Adam<T>(this->learning_rate, beta1, beta2, epsilon);
+}
+
+template <Numeric T>
 void Adam<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {
     t++;
     

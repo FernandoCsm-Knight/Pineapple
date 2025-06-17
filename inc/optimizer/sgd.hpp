@@ -14,6 +14,8 @@ template <Numeric T> class SGD: public Optimizer<T> {
         SGD(T learning_rate, T momentum = 0.9, bool regression = false);
         ~SGD();
 
+        Optimizer<T>* copy() const override;
+
         void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) override;
 
         friend std::ostream& operator<<(std::ostream& os, const SGD<T>& sgd) {

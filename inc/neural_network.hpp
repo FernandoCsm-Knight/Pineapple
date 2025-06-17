@@ -15,11 +15,11 @@
 
 template <Numeric T> class NeuralNetwork {
     private:
-        Sequential<T>* model;
-        LossFunction<T>* loss_function;
+        Sequential<T>* model = nullptr;
+        LossFunction<T>* loss_function = nullptr;
 
     public:
-        NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_function);
+        NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_function, Optimizer<T>* optim);
         ~NeuralNetwork();
 
         Tensor<T> forward(const Tensor<T>& input);
