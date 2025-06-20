@@ -6,58 +6,48 @@
 template <Numeric T>
 template <Integral... Indices>
 Tensor<T> Tensor<T>::operator()(Indices... indices) {
-    int dims = sizeof...(indices);
-    size_t offset = this->index(indices...);
+    const int dims = sizeof...(indices);
+    const size_t offset = this->index(indices...);
     
     Shape subview_shape;
-    if (dims == this->ndim()) {
-        return Tensor<T>(this->data + offset, subview_shape, new int[1]());
-    } else {
-        for(int i = dims; i < this->ndim(); ++i) {
+    int* subview_stride = nullptr;
+    if(dims != this->ndim()) {
+        subview_stride = this->stride + dims;
+        
+        for(int i = dims; i < this->ndim(); ++i) 
             subview_shape.add_dimension(this->shape(i));
-        }
-        
-        int* subview_stride = new int[this->ndim() - dims];
-        for(int i = dims; i < this->ndim(); ++i) {
-            subview_stride[i - dims] = stride[i];
-        }
-        
-        return Tensor<T>(this->data + offset, subview_shape, subview_stride);
     }
+
+    return Tensor<T>(this->data + offset, subview_shape, subview_stride);
 }
 
 template <Numeric T>
 template <Integral... Indices>
 Tensor<T> Tensor<T>::operator()(Indices... indices) const {
-    int dims = sizeof...(indices);
-    size_t offset = this->index(indices...);
+    const int dims = sizeof...(indices);
+    const size_t offset = this->index(indices...);
     
     Shape subview_shape;
-    if (dims == this->ndim()) {
-        return Tensor<T>(this->data + offset, subview_shape, new int[1]());
-    } else {
-        for(int i = dims; i < this->ndim(); ++i) {
+    int* subview_stride = nullptr;
+    if(dims != this->ndim()) {
+        subview_stride = this->stride + dims;
+        
+        for(int i = dims; i < this->ndim(); ++i) 
             subview_shape.add_dimension(this->shape(i));
-        }
-        
-        int* subview_stride = new int[this->ndim() - dims];
-        for(int i = dims; i < this->ndim(); ++i) {
-            subview_stride[i - dims] = stride[i];
-        }
-        
-        return Tensor<T>(this->data + offset, subview_shape, subview_stride);
     }
+
+    return Tensor<T>(this->data + offset, subview_shape, subview_stride);
 }
 
 template <Numeric T>
 template <Integral... Indices>
 size_t Tensor<T>::index(Indices... indices) const {
-    int dims = sizeof...(indices);
+    const int dims = sizeof...(indices);
     if (dims > this->ndim()) {
         throw std::invalid_argument("Too many indices for tensor dimensions");
     }
     
-    int idx_array[] = { static_cast<int>(indices)... };
+    const int idx_array[] = { static_cast<int>(indices)... };
     
     size_t offset = 0;
     for(int i = 0; i < dims; ++i) {

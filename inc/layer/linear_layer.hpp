@@ -12,18 +12,14 @@ template <Numeric T> class LinearLayer: public Layer<T> {
         int in_features;
         int out_features;
 
-        Optimizer<T>* optimizer;
-
         Tensor<T> last_input;
         Tensor<T> weights;
         Tensor<T> bias;
 
     public:
-        LinearLayer(int in_features, int out_features, Optimizer<T>* optim);
-        ~LinearLayer();
+        LinearLayer(int in_features, int out_features);
 
         Tensor<T> forward(const Tensor<T>& input) override;
-
         Tensor<T> backward(const Tensor<T>& grad_weights) override;
 
         friend std::ostream& operator<<(std::ostream& os, const LinearLayer<T>& layer) {

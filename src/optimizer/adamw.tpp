@@ -22,6 +22,11 @@ AdamW<T>::~AdamW() {
 }
 
 template <Numeric T>
+Optimizer<T>* AdamW<T>::copy() const {
+    return new AdamW<T>(this->learning_rate, weight_decay, beta1, beta2, epsilon);
+}
+
+template <Numeric T>
 void AdamW<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {
     t++;
     
@@ -32,9 +37,9 @@ void AdamW<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>
         bias_v = new Tensor<T>(bias.shape(), 0);
     }
     
-    T beta1_t = std::pow(beta1, t);
-    T beta2_t = std::pow(beta2, t);
-    T alpha_t = this->learning_rate * std::sqrt(1 - beta2_t) / (1 - beta1_t);
+    const T beta1_t = std::pow(beta1, t);
+    const T beta2_t = std::pow(beta2, t);
+    const T alpha_t = this->learning_rate * std::sqrt(1 - beta2_t) / (1 - beta1_t);
     
     weights *= (1 - this->learning_rate * weight_decay);
     

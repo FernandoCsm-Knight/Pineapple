@@ -17,6 +17,11 @@ SGD<T>::~SGD() {
 }
 
 template <Numeric T>
+Optimizer<T>* SGD<T>::copy() const {
+    return new SGD<T>(this->learning_rate, momentum, this->regression);
+}
+
+template <Numeric T>
 void SGD<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {
     if (weight_v == nullptr) {
         weight_v = new Tensor<T>(weights.shape(), 0);

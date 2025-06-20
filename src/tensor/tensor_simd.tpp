@@ -14,7 +14,7 @@ size_t Tensor<T>::get_broadcast_index(size_t i, const std::vector<size_t>& other
     
     size_t other_idx = 0;
     for(int dim = 0; dim < this->ndim(); ++dim) {
-        size_t other_dim_idx = (other_shape[dim] == 1) ? 0 : indices[dim] % other_shape[dim];
+        const size_t other_dim_idx = (other_shape[dim] == 1) ? 0 : indices[dim] % other_shape[dim];
         other_idx += other_dim_idx * other_stride[dim];
     }
 
@@ -66,7 +66,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::simd_with_tensor(
         
         #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
-            size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
+            const size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
             callback(result[i], data[i], other.data[other_idx]);
         }        
     }
@@ -128,7 +128,7 @@ Tensor<T>& Tensor<T>::change_tensor_simd(
         
         #pragma omp parallel for
         for(size_t i = 0; i < this->length(); ++i) {
-            size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
+            const size_t other_idx = get_broadcast_index(i, other_shape, other_strides);
             callback(data[i], other.data[other_idx]);
         }        
     }

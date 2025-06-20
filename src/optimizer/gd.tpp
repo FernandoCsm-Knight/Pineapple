@@ -4,7 +4,12 @@
 #include "../../inc/optimizer/gd.hpp"
 
 template <Numeric T>
-GD<T>::GD(T learning_rate, bool regression): Optimizer<T>(learning_rate) { this->regression = regression;}
+GD<T>::GD(T learning_rate, bool regression): Optimizer<T>(learning_rate), regression(regression) {}
+
+template <Numeric T>
+Optimizer<T>* GD<T>::copy() const {
+    return new GD<T>(this->learning_rate, this->regression);
+}
 
 template <Numeric T>
 void GD<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {

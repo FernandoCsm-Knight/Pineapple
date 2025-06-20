@@ -21,6 +21,11 @@ Adam<T>::~Adam() {
 }
 
 template <Numeric T>
+Optimizer<T>* Adam<T>::copy() const {
+    return new Adam<T>(this->learning_rate, beta1, beta2, epsilon);
+}
+
+template <Numeric T>
 void Adam<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {
     t++;
     
@@ -31,9 +36,9 @@ void Adam<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>&
         bias_v = new Tensor<T>(bias.shape(), 0);
     }
     
-    T beta1_t = std::pow(beta1, t);
-    T beta2_t = std::pow(beta2, t);
-    T alpha_t = this->learning_rate * std::sqrt(1 - beta2_t) / (1 - beta1_t);
+    const T beta1_t = std::pow(beta1, t);
+    const T beta2_t = std::pow(beta2, t);
+    const T alpha_t = this->learning_rate * std::sqrt(1 - beta2_t) / (1 - beta1_t);
     
     *weight_m = *weight_m * beta1 + grad_weights * (1 - beta1);
     

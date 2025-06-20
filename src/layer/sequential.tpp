@@ -16,7 +16,7 @@ Sequential<T>::Sequential(std::initializer_list<Layer<T>*> layer_list) {
 
 template <Numeric T>
 Sequential<T>::~Sequential() {
-    for (int i = 0; i < size; ++i) {
+    for(int i = 0; i < size; ++i) {
         delete layers[i];
     }
 
@@ -72,6 +72,16 @@ bool Sequential<T>::length() const {
 template <Numeric T>
 bool Sequential<T>::empty() const {
     return size == 0;
+}
+
+template <Numeric T>
+void Sequential<T>::set_optimizer(Optimizer<T>* optim) {
+    if(this->optimizer) delete this->optimizer;
+    this->optimizer = optim;
+
+    for(int i = 0; i < size; ++i) {
+        layers[i]->set_optimizer(optim);
+    }
 }
 
 template <Numeric T>

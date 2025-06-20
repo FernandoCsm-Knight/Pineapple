@@ -108,8 +108,11 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
 
 template <Numeric T>
 Tensor<T>::~Tensor() {
-    if(owns_data) delete[] data;
-    delete[] stride;
+    if(owns_data) {
+        delete[] data;
+        delete[] stride;
+    }
+
     stride = nullptr;
     data = nullptr;
 }
@@ -119,53 +122,67 @@ Tensor<T>::~Tensor() {
 template <Numeric T>
 Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
     if(this != &other) {
-        if(owns_data) delete[] this->data;
-        delete[] stride;
-
-        this->owns_data = true;
-        this->sh = other.shape();
-        this->data = new T[this->length()]();
-        stride = new int[this->ndim()];
-
-        for(int i = 0; i < this->ndim(); ++i) {
-            stride[i] = other.stride[i];
-        }
-
-        #pragma omp parallel for if(this->length() > 1000)
-        for(size_t i = 0; i < this->length(); ++i) {
-            this->data[i] = other.data[i];
-        }
-    }
-
-    return *this;
-}
-
-template <Numeric T>
-Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) noexcept {
-    if(this != &other) {
-        if(owns_data) delete[] this->data;
-        delete[] stride;
-
-        this->sh = other.shape();
-        this->data = other.data;
-        stride = other.stride;
-        owns_data = other.owns_data;
-
-        other.data = nullptr;
-        other.stride = nullptr;
-        other.owns_data = false;
-    }
-
-    return *this;
-}
-
-template <Numeric T>
-Tensor<T>& Tensor<T>::operator=(const T& value) {
-    if(this->ndim() == 0) {
-        *data = value;
-        return *this;
-    }
+        if(owns_data) {
+            delete[] this->data;
+            delete[] stride;
     
+            this->sh = other.shape();
+            this->data = new T[this->length()]();
+
+            stride = other.is_scalar() ? nullptr : new int[this->ndim()];
+            for(int i = 0; i < this->ndim(); ++i) {
+                stride[i] = other.stride[i];
+            }
+        }
+
+        if(other.is_scalar()) {
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                this->data[i] = other.data[0];
+            }
+        } else {
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                this->data[i] = other.data[i];
+            }
+        }
+    }
+
+    return *this;
+}
+
+template <Numeric T>
+Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
+    if(this != &other) {
+        if(!owns_data) {
+            if(this->length() != other.length()) {
+                throw std::invalid_argument("Cannot assign tensors with different sizes to a view");
+            }
+            
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                this->data[i] = other.data[i];
+            }
+        } else {            
+            delete[] this->data;
+            delete[] stride;
+    
+            this->sh = other.shape();
+            this->data = other.data;
+            stride = other.stride;
+            owns_data = other.owns_data;
+    
+            other.data = nullptr;
+            other.stride = nullptr;
+            other.owns_data = false;
+        }
+    }
+
+    return *this;
+}
+
+template <Numeric T>
+Tensor<T>& Tensor<T>::operator=(const T& value) {    
     #pragma omp parallel for if(this->length() > 1000)
     for(size_t i = 0; i < this->length(); ++i) {
         data[i] = value;
@@ -177,34 +194,39 @@ Tensor<T>& Tensor<T>::operator=(const T& value) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
-    if(owns_data) delete[] this->data;
-    delete[] stride;
-
-    this->owns_data = true;
-    this->sh = other.shape();
-    this->data = new T[this->length()]();
-    stride = new int[this->ndim()];
-
-    for (int i = 0; i < this->ndim(); ++i) {
-        stride[i] = other.stride[i];
-    }
-
-    #pragma omp parallel for if(this->length() > 1000)
-    for (size_t i = 0; i < this->length(); ++i) {
-        this->data[i] = static_cast<T>(other.data[i]);
-    }
+        if(this != &other) {
+        if(owns_data) {
+            delete[] this->data;
+            delete[] stride;
     
+            this->sh = other.shape();
+            this->data = new T[this->length()]();
+
+            stride = other.is_scalar() ? nullptr : new int[this->ndim()];
+            for(int i = 0; i < this->ndim(); ++i) {
+                stride[i] = other.stride[i];
+            }
+        }
+
+        if(other.is_scalar()) {
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                this->data[i] = static_cast<T>(other.data[0]);
+            }
+        } else {
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                this->data[i] = static_cast<T>(other.data[i]);
+            }
+        }
+    }
+
     return *this;
 }
 
 template <Numeric T>
 template <Numeric U>
-Tensor<T>& Tensor<T>::operator=(const U& scalar) {
-    if(this->ndim() == 0) {
-        *data = static_cast<T>(scalar);
-        return *this;
-    }
-    
+Tensor<T>& Tensor<T>::operator=(const U& scalar) {    
     #pragma omp parallel for if(this->length() > 1000)
     for(size_t i = 0; i < this->length(); ++i) {
         data[i] = static_cast<T>(scalar);
@@ -216,23 +238,23 @@ Tensor<T>& Tensor<T>::operator=(const U& scalar) {
 // Iterators
 
 template <Numeric T>
-Iterator<T> Tensor<T>::begin() {
-    return Iterator<T>(this->data);
+T* Tensor<T>::begin() {
+    return this->data;
 }
 
 template <Numeric T>
-Iterator<T> Tensor<T>::end() {
-    return Iterator<T>(this->data + this->length());
+T* Tensor<T>::end() {
+    return this->data + this->length();
 }
 
 template <Numeric T>
-Iterator<const T> Tensor<T>::begin() const {
-    return Iterator<const T>(this->data);
+const T* Tensor<T>::begin() const {
+    return this->data;
 }
 
 template <Numeric T>
-Iterator<const T> Tensor<T>::end() const {
-    return Iterator<const T>(this->data + this->length());
+const T* Tensor<T>::end() const {
+    return this->data + this->length();
 }
 
 #endif

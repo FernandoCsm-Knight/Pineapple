@@ -19,6 +19,7 @@ template <Numeric T> class Activation: public Layer<T> {
         virtual Tensor<T> backward(const Tensor<T>& grad_output) override;
         
         virtual bool is_activation() const override;
+        virtual bool is_optimization() const override;
         virtual void set_last_activation(bool is_last);
         virtual bool is_last_activation() const;
 };

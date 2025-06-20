@@ -22,11 +22,12 @@ template <Numeric T> class Partition {
 
     public:
         Partition(const Tensor<T>& data, const Tensor<T>& target, bool shuffle = false);
+        ~Partition();
 
         void random_seed(int seed);
 
-        std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> stratified_split(const Tensor<T>& stratify, float train_ratio, float test_ratio);
-        std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> split(float train_ratio, float test_ratio);
+        std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> stratified_split(const Tensor<T>& stratify, float test_ratio);
+        std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> split(float test_ratio);
 };
 
 #include "../../src/data/partition.tpp"
