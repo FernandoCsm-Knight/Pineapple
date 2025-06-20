@@ -21,7 +21,7 @@ int main() {
     const int EPOCHS = 1000;
     const int BATCH_SIZE = 32;
 
-    auto [features, labels] = pineapple::create_moons<float>(NUM_SAMPLES, NUM_CLASSES);
+    auto [features, labels] = pineapple::create_zebra<float>(NUM_SAMPLES, NUM_CLASSES);
 
     Partition<float> partition = Partition<float>(features, labels, false);
     auto [X_train, y_train, X_test, y_test] = partition.split(0.2f);
