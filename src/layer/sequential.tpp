@@ -80,7 +80,7 @@ void Sequential<T>::set_optimizer(Optimizer<T>* optim) {
     this->optimizer = optim;
 
     for(int i = 0; i < size; ++i) {
-        layers[i]->set_optimizer(optim->copy());
+        layers[i]->set_optimizer(optim);
     }
 }
 

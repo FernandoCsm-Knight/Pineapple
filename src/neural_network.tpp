@@ -6,8 +6,12 @@
 // Construtor
 
 template <Numeric T>
-NeuralNetwork<T>::NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_function, Optimizer<T>* optim)
-    : model(model), loss_function(loss_function) {
+NeuralNetwork<T>::NeuralNetwork(
+    Sequential<T>* model, 
+    LossFunction<T>* loss_function, 
+    Optimizer<T>* optim, 
+    MetricCollection<T>* metrics
+): model(model), metrics(metrics), loss_function(loss_function) {
 
     if(model == nullptr) {
         throw std::invalid_argument("Model cannot be null");
@@ -33,6 +37,7 @@ NeuralNetwork<T>::NeuralNetwork(Sequential<T>* model, LossFunction<T>* loss_func
 template <Numeric T>
 NeuralNetwork<T>::~NeuralNetwork() {
     delete model;
+    delete metrics;
     delete loss_function;
 }
 
@@ -55,18 +60,36 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
     
     for(int epoch = 0; epoch < epochs; ++epoch) {
         T total_loss = 0;
+
+        if(metrics) metrics->reset();
         
         for(const auto& [batch_X, batch_y] : loader) {
             Tensor<T> predictions = forward(batch_X);
-
+            
             T loss = loss_function->compute(predictions, batch_y);
             total_loss += loss;
+            
+            if(metrics) {
+                Tensor<T> predicted_targets = predictions.argmax(1);
+                metrics->update(predicted_targets, batch_y);
+            }
             
             backward(batch_y, predictions);
         }
         
         if ((epoch + 1) % 10 == 0 || epoch == 0) {
-            std::cout << "Época " << (epoch + 1) << ", Loss: " << (total_loss/loader.num_batches()) << std::endl;
+            std::cout << "Época " << (epoch + 1) << ", Loss: " << (total_loss/loader.num_batches());
+        
+            if(metrics) {
+                std::set<std::string> all_metrics = metrics->all_metrics();
+                
+                for(const std::string& metric_name : all_metrics) {
+                    const float metric_value = metrics->compute(metric_name);
+                    std::cout << ", " << metric_name << ": " << (metric_value * 100) << "%";
+                }
+            }
+
+            std::cout << std::endl;
         }
     }
 }
@@ -75,6 +98,11 @@ template <Numeric T>
 T NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
     Tensor<T> predictions = forward(X).argmax(1);
     Tensor<bool> correct = predictions == y;
+
+    if(metrics) {
+        metrics->reset();
+        metrics->update(predictions, y);
+    }
 
     T sum = 0;
     for(const bool& el : correct) {

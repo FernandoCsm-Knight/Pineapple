@@ -22,6 +22,7 @@ template <Numeric T> class Partition {
 
     public:
         Partition(const Tensor<T>& data, const Tensor<T>& target, bool shuffle = false);
+        ~Partition();
 
         void random_seed(int seed);
 

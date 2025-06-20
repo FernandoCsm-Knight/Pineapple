@@ -47,6 +47,14 @@
 #include "loss/huber_loss.hpp"
 #include "loss/mae_loss.hpp"
 
+// Metrics
+#include "metrics/metric_collection.hpp"
+#include "metrics/accuracy.hpp"
+#include "metrics/f1score.hpp"
+#include "metrics/precision.hpp"
+#include "metrics/recall.hpp"
+#include "metrics/specificity.hpp"
+
 // Neural network
 
 #include "neural_network.hpp"

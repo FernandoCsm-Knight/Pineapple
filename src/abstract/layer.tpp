@@ -22,7 +22,7 @@ template <Numeric T>
 void Layer<T>::set_optimizer(Optimizer<T>* optim) {
     if(this->is_optimization()) {
         if(this->optimizer) delete this->optimizer;
-        this->optimizer = optim;
+        this->optimizer = optim->copy();
     }
 }
 

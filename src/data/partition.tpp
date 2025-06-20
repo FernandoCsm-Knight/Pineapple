@@ -54,6 +54,11 @@ void Partition<T>::random_seed(int seed) {
 }
 
 template <Numeric T>
+Partition<T>::~Partition() {
+    delete[] indices;
+}
+
+template <Numeric T>
 std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_split(const Tensor<T>& stratify, float test_ratio) {
     if(test_ratio > 1.0f) {
         throw std::invalid_argument("Test ratio must be 1 or less");

@@ -12,7 +12,6 @@
 #include <omp.h>
 
 #include "../types/numeric.hpp"
-#include "../../inc/types/correlation.hpp"
 #include "../abstract/shapeable.hpp"
 
 template <Numeric T> class Tensor: public Shapeable {
