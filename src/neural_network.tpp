@@ -37,7 +37,7 @@ NeuralNetwork<T>::NeuralNetwork(
 template <Numeric T>
 NeuralNetwork<T>::~NeuralNetwork() {
     delete model;
-    delete metrics;
+    if(metrics) delete metrics;
     delete loss_function;
 }
 
