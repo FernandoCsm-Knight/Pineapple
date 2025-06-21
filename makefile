@@ -9,7 +9,7 @@ export OMP_NUM_THREADS=$(OMP)
 endif
 
 CXX      = g++
-CXXFLAGS = -fopenmp -std=c++23 -Wall -Iinclude
+CXXFLAGS = -fopenmp -std=c++20 -Wall -Iinclude
 LDFLAGS  =
 $(info Building with g++ (no MPI), using OpenMP)
 
