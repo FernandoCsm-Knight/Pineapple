@@ -27,7 +27,7 @@ Optimizer<T>* AdamW<T>::copy() const {
 }
 
 template <Numeric T>
-void AdamW<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) {
+void AdamW<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias) {
     t++;
     
     if (weight_m == nullptr) {

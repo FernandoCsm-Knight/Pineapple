@@ -44,10 +44,9 @@ Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
 
     this->optimizer->step(
         weights,
-        last_input.transpose().dot(grad_weights), 
+        last_input.transpose().dot(grad_weights) / batch_size, 
         bias,
-        grad_weights.sum(0, true),
-        batch_size
+        grad_weights.sum(0, true) / batch_size
     );
 
     return previous_grad;

@@ -11,6 +11,7 @@
 #include "abstract/optimizer.hpp"
 #include "abstract/activation.hpp"
 #include "abstract/loss_function.hpp"
+#include "abstract/metric_collection.hpp"
 
 // Layers
 
@@ -48,12 +49,20 @@
 #include "loss/mae_loss.hpp"
 
 // Metrics
-#include "metrics/metric_collection.hpp"
+
+#include "metrics/confusion_matrix_collection.hpp"
+
 #include "metrics/accuracy.hpp"
 #include "metrics/f1score.hpp"
 #include "metrics/precision.hpp"
 #include "metrics/recall.hpp"
 #include "metrics/specificity.hpp"
+
+#include "metrics/regression_collection.hpp"
+
+#include "metrics/mae.hpp"
+#include "metrics/mse.hpp"
+#include "metrics/r2_score.hpp"
 
 // Neural network
 

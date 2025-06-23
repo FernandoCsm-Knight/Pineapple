@@ -279,7 +279,7 @@ Tensor<T> Tensor<T>::pow(double exponent) const {
 
 template <Numeric T>
 T Tensor<T>::mean() const {
-    return sum() / this->length();
+    return this->length() == 0 ? 0 : sum().value() / this->length();
 }
 
 template <Numeric T>
@@ -306,7 +306,7 @@ Tensor<T> Tensor<T>::abs() const {
 
     #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
-        result.data[i] = std::abs(this->data[i]);
+        result.data[i] = this->data[i] >= 0 ? this->data[i] : -this->data[i];
     }
 
     return result;
@@ -321,6 +321,44 @@ void Tensor<T>::fill(const T& value) {
 }
 
 // Formatted output
+
+template <Numeric T>
+Tensor<T> Tensor<T>::squeeze() const {
+    Shape new_shape = this->shape();
+    new_shape.squeeze();
+    
+    const bool valid = new_shape != this->shape();
+    Tensor<T> result(new_shape);
+
+    if(valid) {
+        #pragma omp parallel for if(this->length() > 1000)
+        for(size_t i = 0; i < this->length(); ++i) {
+            result.data[i] = this->data[i];
+        }
+    }
+    
+    
+    return valid ? result : *this;
+}
+
+template <Numeric T>
+Tensor<T> Tensor<T>::unsqueeze(int idx) const {
+    if(idx < 0 || idx > this->ndim()) {
+        throw std::out_of_range("Insert position out of range");
+    }
+    
+    Shape new_shape = this->shape();
+    new_shape.unsqueeze(idx);
+    
+    Tensor<T> result(new_shape);
+    
+    #pragma omp parallel for if(this->length() > 1000)
+    for(size_t i = 0; i < this->length(); ++i) {
+        result.data[i] = this->data[i];
+    }
+    
+    return result;
+}
 
 template <Numeric T>
 Tensor<T> Tensor<T>::reshape(Shape new_shape) const {

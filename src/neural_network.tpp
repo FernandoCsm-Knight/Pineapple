@@ -3,7 +3,7 @@
 
 #include "../inc/neural_network.hpp"
 
-// Construtor
+// Constructor
 
 template <Numeric T>
 NeuralNetwork<T>::NeuralNetwork(
@@ -69,10 +69,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             T loss = loss_function->compute(predictions, batch_y);
             total_loss += loss;
             
-            if(metrics) {
-                Tensor<T> predicted_targets = predictions.argmax(1);
-                metrics->update(predicted_targets, batch_y);
-            }
+            if(metrics) metrics->update(predictions, batch_y);
             
             backward(batch_y, predictions);
         }
@@ -95,21 +92,11 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
 }
 
 template <Numeric T>
-T NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
-    Tensor<T> predictions = forward(X).argmax(1);
-    Tensor<bool> correct = predictions == y;
-
+void NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
     if(metrics) {
         metrics->reset();
-        metrics->update(predictions, y);
+        metrics->update(forward(X), y.squeeze());
     }
-
-    T sum = 0;
-    for(const bool& el : correct) {
-        if(el) sum += 1;
-    }
-
-    return sum / correct.length();
 }
 
 #endif

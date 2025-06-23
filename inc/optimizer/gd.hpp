@@ -4,15 +4,12 @@
 #include "../abstract/optimizer.hpp"
 
 template <Numeric T> class GD: public Optimizer<T> {
-    private:
-        bool regression;
-    
     public:
-        GD(T learning_rate, bool regression = false);
+        GD(T learning_rate);
 
         Optimizer<T>* copy() const override;
 
-        void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) override;
+        void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias) override;
 
         friend std::ostream& operator<<(std::ostream& os, const GD<T>& gd) {
             os << "GD(learning_rate=" << gd.learning_rate << ")";

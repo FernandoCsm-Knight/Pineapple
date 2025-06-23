@@ -253,6 +253,8 @@ template <Numeric T> class Tensor: public Shapeable {
 
         Tensor<T> transpose() const;
         Tensor<T> reshape(Shape new_shape) const;
+        Tensor<T> squeeze() const;
+        Tensor<T> unsqueeze(int idx) const;
         Tensor<T> flatten() const;
         Tensor<T> slice(int start, int end, int step = 1) const;
 

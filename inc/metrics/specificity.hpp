@@ -3,12 +3,13 @@
 
 #include "../abstract/metric.hpp"
 
-class Specificity: public Metric {
+template <Numeric T> class Specificity: public Metric<T> {
     public:
         Specificity(Average average = Average::macro);
 
         std::string name() const override;
         float compute(int TP, int TN, int FP, int FN) const override;
+        float compute(const Tensor<T>& predictions, const Tensor<T>& targets) override;
 };
 
 #include "../../src/metrics/specificity.tpp"
