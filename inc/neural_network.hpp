@@ -14,7 +14,7 @@
 
 #include "tensor/tensor.hpp"
 
-#include "metrics/metric_collection.hpp"
+#include "abstract/metric_collection.hpp"
 
 template <Numeric T> class NeuralNetwork {
     private:
@@ -38,7 +38,7 @@ template <Numeric T> class NeuralNetwork {
         
         void train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size = 32);
         
-        T evaluate(const Tensor<T>& X, const Tensor<T>& y);
+        void evaluate(const Tensor<T>& X, const Tensor<T>& y);
 
         friend std::ostream& operator<<(std::ostream& os, const NeuralNetwork<T>& nn) {
             os << "Summary of Neural Network:" << std::endl;

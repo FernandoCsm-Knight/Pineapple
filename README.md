@@ -1,10 +1,10 @@
 # Pineapple
 
-> ### Version 0.2.0
+> ### Version 0.3.0
 
-Pineapple is a C++20 micro-framework for AI. It supports building and evaluating dense neural networks for classification and offers CPU-level parallelism. Data handling is centered on the Tensor class, which provides shape broadcasting, element-wise arithmetic and boolean operations, reductions, basic linear algebra, 1-D/2-D convolutions and correlations, plus flexible indexing, slicing, transposition, and reshaping, all generically typed through templates for any numeric type. At version 0.2.0 the framework focuses on supervised classification with dense layers, supplying activation and loss functions, multiple optimizers and a collection of classification metrics, but it already lays an extensible foundation for future convolutional layers, GPU support, and additional optimization algorithms (see branch dev).
+Pineapple is a C++20 micro-framework for AI. It supports building and evaluating dense neural networks for classification and regression, it offers CPU-level parallelism. Data handling is done by Tensor class, which provides shape broadcasting, element-wise arithmetic and boolean operations, reductions, basic linear algebra, 1-D/2-D convolutions and correlations, plus flexible indexing, slicing, transposition, and reshaping, all generically typed through templates for any numeric type. At version 0.3.0 the framework focuses on supervised classification and regression with dense layers, supplying activation and loss functions, multiple optimizers and a collection of classification metrics, but it already lays an extensible foundation for future convolutional layers, GPU support, and additional optimization algorithms (see branch dev).
 
-## Features (version 0.2.0)
+## Features (version 0.3.0)
 
 - **Dense Neural Networks**: Build and train fully connected neural networks with customizable architectures
 - **CPU Parallelism**: OpenMP support for parallel computation across multiple threads

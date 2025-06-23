@@ -5,9 +5,9 @@
 #include <limits>
 #include <string>
 
-#include "../types/numeric.hpp"
+#include "../tensor/tensor.hpp"
 
-class Metric {
+template <Numeric T> class Metric {
     protected:
         Average average = Average::macro;
 
@@ -19,6 +19,7 @@ class Metric {
 
         virtual std::string name() const = 0;
         virtual float compute(int TP, int TN, int FP, int FN) const = 0;
+        virtual float compute(const Tensor<T>& predictions, const Tensor<T>& targets) = 0;
 };
 
 #endif 

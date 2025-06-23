@@ -17,8 +17,7 @@ template <Numeric T> class Optimizer {
             Tensor<T>& weights, 
             const Tensor<T>& grad_weights, 
             Tensor<T>& bias, 
-            const Tensor<T>& grad_bias,
-            int batch_size = 1
+            const Tensor<T>& grad_bias
         ) = 0;
 };
 

@@ -1,12 +1,12 @@
-#ifndef METRIC_COLLECTION_TPP
-#define METRIC_COLLECTION_TPP
+#ifndef CONFUSION_MATRIX_COLLECTION_TPP
+#define CONFUSION_MATRIX_COLLECTION_TPP
 
-#include "../../inc/metrics/metric_collection.hpp"
+#include "../../inc/metrics/confusion_matrix_collection.hpp"
 
 // Private methods
 
 template <Numeric T>
-float MetricCollection<T>::average_micro(Metric* metric) const {
+float ConfusionMatrixCollection<T>::average_micro(Metric<T>* metric) const {
     int TP = 0, FP = 0, FN = 0, TN = 0;
 
     for(int i = 0; i < num_classes; ++i) {
@@ -27,7 +27,7 @@ float MetricCollection<T>::average_micro(Metric* metric) const {
 
 
 template <Numeric T>
-float MetricCollection<T>::average_macro(Metric* metric) const {
+float ConfusionMatrixCollection<T>::average_macro(Metric<T>* metric) const {
     float sum = 0.0f;
     int valid = 0;
 
@@ -55,7 +55,7 @@ float MetricCollection<T>::average_macro(Metric* metric) const {
 }
 
 template <Numeric T>
-float MetricCollection<T>::average_weighted(Metric* metric) const {
+float ConfusionMatrixCollection<T>::average_weighted(Metric<T>* metric) const {
     float sum = 0.0f;
     int total = 0;
 
@@ -97,18 +97,18 @@ float MetricCollection<T>::average_weighted(Metric* metric) const {
 // Constructors
 
 template <Numeric T>
-MetricCollection<T>::MetricCollection() {}
+ConfusionMatrixCollection<T>::ConfusionMatrixCollection() {}
 
 template <Numeric T>
-MetricCollection<T>::MetricCollection(int num_classes) {
+ConfusionMatrixCollection<T>::ConfusionMatrixCollection(int num_classes) {
     this->init_matrix(num_classes);
 }
 
 template <Numeric T>
-MetricCollection<T>::MetricCollection(int num_classes, std::initializer_list<Metric*> metrics) {
+ConfusionMatrixCollection<T>::ConfusionMatrixCollection(int num_classes, std::initializer_list<Metric<T>*> metrics) {
     this->init_matrix(num_classes);
     
-    for(Metric* metric : metrics) {
+    for(Metric<T>* metric : metrics) {
         this->metrics[metric->name()] = metric;
     }
 }
@@ -116,23 +116,19 @@ MetricCollection<T>::MetricCollection(int num_classes, std::initializer_list<Met
 // Destructor
 
 template <Numeric T>
-MetricCollection<T>::~MetricCollection() {
+ConfusionMatrixCollection<T>::~ConfusionMatrixCollection() {
     if(cm != nullptr) {
         for(int i = 0; i < num_classes; ++i) {
             delete[] cm[i];
         }
         delete[] cm;
     }
-
-    for(const auto& entry : metrics) {
-        delete entry.second;
-    }
 }
 
 // Public methods
 
 template <Numeric T>
-void MetricCollection<T>::init_matrix(int num_classes) {
+void ConfusionMatrixCollection<T>::init_matrix(int num_classes) {
     if(cm != nullptr) {
         for(int i = 0; i < this->num_classes; ++i) {
             delete[] cm[i];
@@ -149,12 +145,12 @@ void MetricCollection<T>::init_matrix(int num_classes) {
 }
 
 template <Numeric T>
-inline int MetricCollection<T>::classes() const {
+inline int ConfusionMatrixCollection<T>::classes() const {
     return this->num_classes;
 }
 
 template <Numeric T>
-inline Tensor<int> MetricCollection<T>::confusion_matrix() const {
+inline Tensor<int> ConfusionMatrixCollection<T>::confusion_matrix() const {
     Tensor<int> result(num_classes, num_classes);
 
     for(int i = 0; i < num_classes; ++i) {
@@ -167,25 +163,27 @@ inline Tensor<int> MetricCollection<T>::confusion_matrix() const {
 }
 
 template <Numeric T>
-void MetricCollection<T>::update(const Tensor<T>& predictions, const Tensor<T>& targets) {
-    if(predictions.length() != targets.length()) {
-        throw std::invalid_argument("Predictions and targets must have the same length.");
+void ConfusionMatrixCollection<T>::update(const Tensor<T>& predictions, const Tensor<T>& targets) {
+    Tensor<T> predicted_targets = predictions.argmax(1);
+
+    if(predicted_targets.length() != targets.length()) {
+        throw std::invalid_argument("Predictions argmax and targets must have the same length.");
     }
 
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
 
-    for(size_t i = 0; i < predictions.length(); ++i) {
+    for(size_t i = 0; i < predicted_targets.length(); ++i) {
         const int target = targets[i];
-        const int prediction = predictions[i];
+        const int prediction = predicted_targets[i];
 
         cm[target][prediction]++;
     }
 }
 
 template <Numeric T>
-void MetricCollection<T>::reset() {
+void ConfusionMatrixCollection<T>::reset() {
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
@@ -198,7 +196,7 @@ void MetricCollection<T>::reset() {
 }
 
 template <Numeric T>
-inline float MetricCollection<T>::true_positive(int class_idx) const {
+inline float ConfusionMatrixCollection<T>::true_positive(int class_idx) const {
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
@@ -207,7 +205,7 @@ inline float MetricCollection<T>::true_positive(int class_idx) const {
 }
 
 template <Numeric T>
-inline float MetricCollection<T>::true_negative(int class_idx) const {
+inline float ConfusionMatrixCollection<T>::true_negative(int class_idx) const {
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
@@ -226,7 +224,7 @@ inline float MetricCollection<T>::true_negative(int class_idx) const {
 }
 
 template <Numeric T>
-inline float MetricCollection<T>::false_positive(int class_idx) const { 
+inline float ConfusionMatrixCollection<T>::false_positive(int class_idx) const { 
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
@@ -243,7 +241,7 @@ inline float MetricCollection<T>::false_positive(int class_idx) const {
 }
 
 template <Numeric T>
-inline float MetricCollection<T>::false_negative(int class_idx) const {
+inline float ConfusionMatrixCollection<T>::false_negative(int class_idx) const {
     if(cm == nullptr) {
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
@@ -260,31 +258,8 @@ inline float MetricCollection<T>::false_negative(int class_idx) const {
 }
 
 template <Numeric T>
-bool MetricCollection<T>::has_metric(const std::string& metric) const {
-    return metrics.find(metric) != metrics.end();
-}
-
-template <Numeric T>
-bool MetricCollection<T>::add_metric(Metric* metric) {
-    bool response = !has_metric(metric->name());
-    if(response) metrics[metric->name()] = metric;
-    return response;
-}
-
-template <Numeric T>
-std::set<std::string> MetricCollection<T>::all_metrics() const {
-    std::set<std::string> names;
-
-    for(const auto& entry : metrics) {
-        names.insert(entry.first);
-    }
-    
-    return names;
-}
-
-template <Numeric T>
-float MetricCollection<T>::compute(const std::string& metric, int class_idx) const {
-    if(metrics.find(metric) == metrics.end()) {
+float ConfusionMatrixCollection<T>::compute(const std::string& metric, int class_idx) const {
+    if(!this->has_metric(metric)) {
         throw std::invalid_argument("Metric not found: " + metric);
     }
 
@@ -292,7 +267,7 @@ float MetricCollection<T>::compute(const std::string& metric, int class_idx) con
         throw std::runtime_error("Confusion matrix not initialized. Call init_matrix() first.");
     }
 
-    Metric* m = metrics.at(metric);
+    Metric<T>* m = this->metrics.at(metric);
     float result = 0.0f;
 
     if(class_idx == -1) {

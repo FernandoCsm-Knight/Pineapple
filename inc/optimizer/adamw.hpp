@@ -24,7 +24,7 @@ template <Numeric T> class AdamW: public Optimizer<T> {
 
         Optimizer<T>* copy() const override;
 
-        void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias, int batch_size) override;
+        void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias) override;
 
         friend std::ostream& operator<<(std::ostream& os, const AdamW<T>& adamw) {
             os << "AdamW(learning_rate=" << adamw.learning_rate << ", weight_decay=" << adamw.weight_decay;
