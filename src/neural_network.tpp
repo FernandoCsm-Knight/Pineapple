@@ -82,7 +82,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
                 
                 for(const std::string& metric_name : all_metrics) {
                     const float metric_value = metrics->compute(metric_name);
-                    std::cout << ", " << metric_name << ": " << (metric_value * 100) << "%";
+                    std::cout << ", " << metric_name << ": " << metric_value;
                 }
             }
 

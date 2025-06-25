@@ -1,7 +1,5 @@
 #include "inc/pineapple.hpp"
 
-#include "inc/pineapple.hpp"
-
 int main() {
     const int NUM_SAMPLES = 1000;
     const int NUM_CLASSES = 2;
