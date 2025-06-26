@@ -63,6 +63,8 @@ template <Numeric T> class Tensor: public Shapeable {
 
         Tensor(const Shape& shape);
 
+        Tensor(const Shape& shape, std::initializer_list<T> values);
+
         Tensor(const Shape& shape, const T& value);
 
         Tensor(const Tensor<T>& other);

@@ -44,6 +44,29 @@ Tensor<T>::Tensor(const Shape& shape): Shapeable(shape) {
 }
 
 template <Numeric T>
+Tensor<T>::Tensor(const Shape& shape, std::initializer_list<T> values): Shapeable(shape) {
+    if(values.size() != this->length()) {
+        throw std::invalid_argument("Initializer list size does not match tensor shape");
+    }
+
+    data = new T[this->length()]();
+    stride = new int[this->ndim()];
+    owns_data = true;
+
+    if(this->ndim() != 0) {
+        stride[this->ndim() - 1] = 1;
+        for(int i = this->ndim() - 2; i >= 0; --i) {
+            stride[i] = stride[i + 1] * this->shape(i + 1);
+        }
+    }
+
+    #pragma omp parallel for if(this->length() > 1000)
+    for(size_t i = 0; i < this->length(); ++i) {
+        data[i] = *(values.begin() + i);
+    }
+}
+
+template <Numeric T>
 Tensor<T>::Tensor(const Shape& shape, const T& value): Shapeable(shape) {
     data = new T[this->length()]();
     stride = new int[this->ndim()];
