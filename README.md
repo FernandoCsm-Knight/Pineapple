@@ -26,7 +26,15 @@ Pineapple is a C++20 micro-framework for AI. It supports building and evaluating
 - OpenMP support
 - Make utility
 
+### Installation Methods
+
+See the [INSTALL.md](INSTALL.md) file for detailed installation instructions.
+
 ### Build Instructions
+
+If you prefer to run Pineapple without installing it, you can build it directly from the source code. In this case, you will also need C++20 compatible compiler and OpenMP support. 
+
+To build and run Pineapple from source you will need to create a `main.cpp` file at the root of the repository and use the provided Makefile to compile and run your code. With the Makefile you can do the following commands:
 
 1. Clone the repository:
 ```bash
@@ -74,13 +82,11 @@ make rerun OMP=<threads>
 
 ## Exemples
 
-To use Pineapple, you can use the main file `main.cpp` to create your own neural networks, load datasets, and perform training and evaluation. The framework provides a simple interface for defining models, specifying loss functions, and choosing optimizers.
-
-As you start using Pineapple, you can refer to the provided video examples for guidance on how to implement various neural network architectures. If you don't want to use the default `main.cpp`, you will need to include the `pineapple.hpp` header in your project and link the template files at your own makefile.
-
-> Warning: In future versions CMake will be used to install and uninstall the library at windows and linux envirounments.
+To get started with Pineapple, you can refer to the provided examples in the`[examples](examples)` directory. These examples demonstrate how to create and train neural networks for classification and regression.
 
 ### Videos 
+
+To learn Pineapple, you can refer to the provided video examples for guidance on how to implement neural network architectures. 
 
 1. [Introduction to Tensor]()
 2. [Introduction to Pineapple Classification]()
@@ -90,7 +96,7 @@ As you start using Pineapple, you can refer to the provided video examples for g
 
 ### Books
 
-Most algorithms and concetps implemented in Pineapple are based on the following books:
+Most algorithms and concepts implemented in Pineapple are based on the following books:
 
 - [Data Mining: Concepts and Techniques, 4th edition](https://www.educate.elsevier.com/book/details/9780128117606)
 - [Deep Learning](https://www.deeplearningbook.org/)
