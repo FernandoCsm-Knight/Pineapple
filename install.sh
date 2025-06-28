@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Pineapple library installation script
-# Author: Pineapple Library
+# Author: Fernando Campos Silva Dal Maria
 # Description: Installs the header-only Pineapple library on the system
 
 set -e  # Exit on error
 
 # Configuration
 LIBRARY_NAME="pineapple"
-VERSION="1.0.0"
+VERSION="0.3.0"
 PREFIX="${PREFIX:-/usr/local}"
 INCLUDEDIR="$PREFIX/include"
 PKGCONFIGDIR="$PREFIX/lib/pkgconfig"
@@ -20,7 +20,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Helper functions
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -37,7 +36,6 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to check if root or has sudo
 check_permissions() {
     if [[ $EUID -eq 0 ]]; then
         SUDO=""
@@ -50,7 +48,6 @@ check_permissions() {
     fi
 }
 
-# Function to check dependencies
 check_dependencies() {
     print_info "Checking dependencies..."
     
@@ -73,22 +70,18 @@ check_dependencies() {
     print_success "Dependencies checked"
 }
 
-# Function to install
 install_library() {
     print_info "Installing Pineapple library..."
     
-    # Create directories
     print_info "Creating installation directories..."
     $SUDO mkdir -p "$INCLUDEDIR/$LIBRARY_NAME"
     $SUDO mkdir -p "$PKGCONFIGDIR"
     
-    # Copy headers and implementations
     print_info "Copying header files and implementations..."
     $SUDO cp -r inc "$INCLUDEDIR/$LIBRARY_NAME/"
     $SUDO cp -r src "$INCLUDEDIR/$LIBRARY_NAME/"
     $SUDO cp pineapple.hpp "$INCLUDEDIR/$LIBRARY_NAME/"
     
-    # Verify files were copied
     if [ ! -f "$INCLUDEDIR/$LIBRARY_NAME/pineapple.hpp" ]; then
         print_error "Failed to copy main pineapple.hpp file"
         exit 1
@@ -104,7 +97,6 @@ install_library() {
         exit 1
     fi
     
-    # Create pkg-config file
     print_info "Creating pkg-config file..."
     cat > /tmp/pineapple.pc << EOF
 prefix=$PREFIX
@@ -130,7 +122,6 @@ EOF
     print_success "Pineapple library installed successfully!"
 }
 
-# Function to test installation
 test_installation() {
     print_info "Testing installation..."
     
@@ -166,7 +157,6 @@ EOF
     rm -f /tmp/test_pineapple.cpp /tmp/test_pineapple
 }
 
-# Function to show usage information
 show_usage_info() {
     echo ""
     print_success "=== INSTALLATION COMPLETED ==="
@@ -197,13 +187,11 @@ EOF
     print_info "To uninstall: ./uninstall.sh or sudo rm -rf $INCLUDEDIR/$LIBRARY_NAME $PKGCONFIGDIR/pineapple.pc"
 }
 
-# Main function
 main() {
     echo ""
     print_info "=== PINEAPPLE LIBRARY INSTALLER ==="
     echo ""
     
-    # Check if we're in the correct directory
     if [ ! -f "pineapple.hpp" ]; then
         print_error "pineapple.hpp file not found in root!"
         print_error "Run this script in the Pineapple library root directory"
@@ -232,7 +220,6 @@ main() {
     print_success "Installation complete!"
 }
 
-# Check arguments
 if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     echo "Pineapple Library Installer"
     echo ""
@@ -250,5 +237,4 @@ if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     exit 0
 fi
 
-# Run installation
 main

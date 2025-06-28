@@ -33,7 +33,6 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check permissions
 check_permissions() {
     if [[ $EUID -eq 0 ]]; then
         SUDO=""
@@ -46,7 +45,6 @@ check_permissions() {
     fi
 }
 
-# Main uninstallation function
 uninstall_library() {
     print_info "Uninstalling Pineapple library..."
     
@@ -80,7 +78,6 @@ main() {
     
     check_permissions
     
-    # Confirmation
     read -p "Are you sure you want to uninstall the Pineapple library? (y/N): " confirm
     
     if [[ $confirm =~ ^[Yy]$ ]]; then
@@ -92,7 +89,6 @@ main() {
     fi
 }
 
-# Check arguments
 if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     echo "Pineapple Library Uninstaller"
     echo ""
