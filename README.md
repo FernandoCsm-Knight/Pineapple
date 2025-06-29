@@ -88,9 +88,10 @@ To get started with Pineapple, you can refer to the provided examples in the`[ex
 
 To learn Pineapple, you can refer to the provided video examples for guidance on how to implement neural network architectures. 
 
-1. [Introduction to Tensor]()
-2. [Introduction to Pineapple Classification]()
-3. [Introduction to Pineapple Regression]()
+1. [Installation and Setup](https://youtu.be/jr9qMVzLQS8)
+2. [Introduction to Tensor]()
+3. [Introduction to Pineapple Classification]()
+4. [Introduction to Pineapple Regression]()
 
 ## References
 
