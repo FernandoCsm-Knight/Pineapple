@@ -4,6 +4,13 @@ This document explains how to install the Pineapple library on your Linux system
 
 ## Quick Installation
 
+Clone the repository and choose one of the installation methods below.
+
+```bash
+git clone https://github.com/FernandoCsm-Knight/Pineapple.git
+cd Pineapple
+```
+
 ### Method 1: Installation Script (Recommended)
 
 ```bash

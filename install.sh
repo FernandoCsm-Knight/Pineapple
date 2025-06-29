@@ -61,9 +61,18 @@ check_dependencies() {
     fi
     
     # Check OpenMP
-    if ! echo '#include <omp.h>' | g++ -fopenmp -x c++ - -o /tmp/test_omp 2>/dev/null; then
+    cat > /tmp/test_omp.cpp << EOF
+#include <omp.h>
+
+int main() {
+    return 0;
+}
+EOF
+
+    if ! g++ -fopenmp -x c++ /tmp/test_omp.cpp -o /tmp/test_omp 2>/dev/null; then
         print_warning "OpenMP may not be available. Library will work but without parallelization"
     else
+        rm -f /tmp/test_omp.cpp
         rm -f /tmp/test_omp
     fi
     
