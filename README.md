@@ -14,9 +14,9 @@ Pineapple is a C++20 micro-framework for AI. It supports building and evaluating
   - 1-D/2-D convolutions and correlations
   - Flexible indexing, slicing, and reshaping
 - **Activation Functions**: Multiple activation functions (ReLU, Sigmoid, Tanh, ELU, Leaky ReLU, Softmax)
-- **Loss Functions**: Various loss functions for classification tasks
+- **Loss Functions**: Various loss functions for classification and regression tasks
 - **Optimizers**: Multiple optimization algorithms for training
-- **Metrics**: Collection of classification metrics for model evaluation
+- **Metrics**: Collection of metrics for model evaluation
 
 ## Installation
 
