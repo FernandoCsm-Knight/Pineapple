@@ -30,8 +30,8 @@ void SGD<T>::step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& 
     *weight_v = *weight_v * momentum - grad_weights * this->learning_rate;
     *bias_v = *bias_v * momentum - grad_bias * this->learning_rate;
 
-    weights -= *weight_v;
-    bias -= *bias_v;
+    weights += *weight_v;
+    bias += *bias_v;
 }
 
 #endif
