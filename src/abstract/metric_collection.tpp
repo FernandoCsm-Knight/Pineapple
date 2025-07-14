@@ -18,7 +18,7 @@ Metric<T>* MetricCollection<T>::get(const std::string& metric) const {
         throw std::invalid_argument("Metric '" + metric + "' does not exist in the collection.");
     }
     
-    return metrics[metric].second;
+    return metrics.at(metric);
 }
 
 template <Numeric T>
