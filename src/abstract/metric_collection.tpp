@@ -13,12 +13,12 @@ MetricCollection<T>::~MetricCollection() {
 }
 
 template <Numeric T>
-Metric<T>* MetricCollection<T>::get(const std::string& metric) const {
+Metric<T>* MetricCollection<T>::get(const std::string& metric) {
     if(!has_metric(metric)) {
         throw std::invalid_argument("Metric '" + metric + "' does not exist in the collection.");
     }
     
-    return metrics.at(metric);
+    return metrics[metric];
 }
 
 template <Numeric T>

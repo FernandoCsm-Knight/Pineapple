@@ -14,7 +14,7 @@ template <Numeric T> class MetricCollection {
     public:
         virtual ~MetricCollection();
 
-        Metric<T>* get(const std::string& metric) const;
+        Metric<T>* get(const std::string& metric);
 
         bool has_metric(const std::string& metric) const;
         bool add_metric(Metric<T>* metric);
