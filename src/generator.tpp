@@ -2,7 +2,6 @@
 #define GENERATOR_TPP
 
 #include "../inc/generator.hpp"
-#include <random>
 
 namespace pineapple {
 
@@ -190,6 +189,81 @@ namespace pineapple {
             data(i, 0) = x;
             data(i, 1) = y;
             target[i] = class_id;
+        }
+
+        return std::make_pair(data, target);
+    }
+
+    template <Numeric T>
+    std::pair<Tensor<T>, Tensor<T>> regression_dataset(
+        int num_samples, 
+        int num_features,
+        float lower_bound,
+        float upper_bound,
+        float noise_max
+    ) {
+        if(upper_bound < lower_bound) {
+            throw std::invalid_argument("upper_bound must be greater than or equal to lower_bound");
+        }
+
+        Tensor<T> data(num_samples, num_features);
+        Tensor<T> coefficients(num_features);
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> std_dist(lower_bound, upper_bound);
+        std::uniform_real_distribution<float> noise_dist(0.0f, noise_max);
+
+        #pragma omp parallel for if(coefficients.length() > 1000)
+        for(size_t i = 0; i < num_features; ++i) {
+            coefficients[i] = static_cast<T>(std_dist(gen));
+        }
+
+        #pragma omp parallel for if(data.length() > 1000)
+        for(size_t i = 0; i < data.length(); ++i) {
+            data[i] = static_cast<T>(std_dist(gen));
+        }
+
+        Tensor<T> noise(num_samples);
+        #pragma omp parallel for if(noise.length() > 1000)
+        for(size_t i = 0; i < noise.length(); ++i) {
+            noise[i] = static_cast<T>(noise_dist(gen));
+        }
+
+        const Tensor<T> target = data.dot(coefficients) + noise;
+
+        return std::make_pair(data, target);
+    }
+
+    template <Numeric T>
+    std::pair<Tensor<T>, Tensor<T>> spread_function(
+        int num_samples,
+        int num_features,
+        const std::function<T(const Tensor<T>& coef)>& func,
+        float lower_bound,
+        float upper_bound,
+        float noise_max
+    ) {
+        if(upper_bound < lower_bound) {
+            throw std::invalid_argument("upper_bound must be greater than or equal to lower_bound");
+        }
+
+        Tensor<T> data(num_samples, num_features);
+        Tensor<T> target(num_samples);
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> std_dist(lower_bound, upper_bound);
+        std::uniform_real_distribution<float> noise_dist(0.0f, noise_max);
+
+        #pragma omp parallel for if(data.length() > 1000)
+        for(size_t i = 0; i < data.length(); ++i) {
+            data[i] = static_cast<T>(std_dist(gen));
+        }
+
+        #pragma omp parallel for if(num_samples > 1000)
+        for(int i = 0; i < num_samples; ++i) {
+            target[i] = func(data(i)) + noise_dist(gen);
         }
 
         return std::make_pair(data, target);

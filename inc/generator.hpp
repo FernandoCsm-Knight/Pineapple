@@ -2,8 +2,10 @@
 #define GENERATOR_HPP
 
 #include <random>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <functional>
+
 #include "tensor/tensor.hpp"
 
 namespace pineapple {
@@ -86,6 +88,25 @@ namespace pineapple {
         float gap = 30.0f,
         float noise_max = 10.0f,
         float theta = 1.0f
+    );
+
+    template <Numeric T>
+    std::pair<Tensor<T>, Tensor<T>> regression_dataset(
+        int num_samples, 
+        int num_features,
+        float lower_bound = 0.0f,
+        float upper_bound = 100.0f,
+        float noise_max = 0.1f
+    );
+
+    template <Numeric T>
+    std::pair<Tensor<T>, Tensor<T>> spread_function(
+        int num_samples,
+        int num_features,
+        const std::function<T(const Tensor<T>& coef)>& func,
+        float lower_bound = 0.0f,
+        float upper_bound = 100.0f,
+        float noise_max = 0.1f
     );
 
 }
