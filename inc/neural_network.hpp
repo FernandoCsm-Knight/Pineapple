@@ -16,7 +16,7 @@
 
 #include "abstract/metric_collection.hpp"
 
-template <Numeric T> class NeuralNetwork {
+template <Numeric T> class NeuralNetwork: public Layer<T> {
     private:
         Sequential<T>* model = nullptr;
         MetricCollection<T>* metrics = nullptr;
@@ -32,12 +32,10 @@ template <Numeric T> class NeuralNetwork {
 
         ~NeuralNetwork();
 
-        Tensor<T> forward(const Tensor<T>& input);
-        
-        void backward(const Tensor<T>& targets, const Tensor<T>& predictions);
-        
+        Tensor<T> forward(const Tensor<T>& input) override;
+        Tensor<T> backward(const Tensor<T>& grad_output) override;
+
         void train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size = 32);
-        
         void evaluate(const Tensor<T>& X, const Tensor<T>& y);
 
         friend std::ostream& operator<<(std::ostream& os, const NeuralNetwork<T>& nn) {

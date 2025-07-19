@@ -18,6 +18,7 @@
 #include "inc/layer/flatten_layer.hpp"
 #include "inc/layer/linear_layer.hpp"
 #include "inc/layer/sequential.hpp"
+#include "inc/layer/dropout_layer.hpp"
 
 // Optimizers
 

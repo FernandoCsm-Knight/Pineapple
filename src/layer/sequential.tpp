@@ -65,7 +65,7 @@ Layer<T>* Sequential<T>::operator[](int index) const {
 }
 
 template <Numeric T>
-bool Sequential<T>::length() const {
+int Sequential<T>::length() const {
     return size;
 }
 
@@ -81,6 +81,22 @@ void Sequential<T>::set_optimizer(Optimizer<T>* optim) {
 
     for(int i = 0; i < size; ++i) {
         layers[i]->set_optimizer(optim);
+    }
+}
+
+template <Numeric T>
+void Sequential<T>::train() {
+    this->training = true;
+    for(int i = 0; i < size; ++i) {
+        layers[i]->train();
+    }
+}
+
+template <Numeric T>
+void Sequential<T>::eval() {
+    this->training = false;
+    for(int i = 0; i < size; ++i) {
+        layers[i]->eval();
     }
 }
 

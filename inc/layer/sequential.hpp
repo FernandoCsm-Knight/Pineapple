@@ -23,10 +23,13 @@ template <Numeric T> class Sequential: public Layer<T> {
 
         Layer<T>* operator[](int index) const;
 
-        bool length() const;
+        int length() const;
         bool empty() const;
 
         void set_optimizer(Optimizer<T>* optim) override;
+
+        void train() override;
+        void eval() override;
 
         Layer<T>** begin();
         Layer<T>** end();

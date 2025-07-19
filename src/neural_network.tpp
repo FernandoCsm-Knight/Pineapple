@@ -49,15 +49,16 @@ Tensor<T> NeuralNetwork<T>::forward(const Tensor<T>& input) {
 }
 
 template <Numeric T>
-void NeuralNetwork<T>::backward(const Tensor<T>& targets, const Tensor<T>& predictions) {
-    Tensor<T> loss_grad = loss_function->gradient(predictions, targets);
-    model->backward(loss_grad);
+Tensor<T> NeuralNetwork<T>::backward(const Tensor<T>& grad_output) {
+    return model->backward(grad_output);
 }
 
 template <Numeric T>
 void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size) {
     BatchLoader<T> loader(X, y, batch_size, true);
-    
+
+    model->train();
+
     for(int epoch = 0; epoch < epochs; ++epoch) {
         T total_loss = 0;
 
@@ -71,7 +72,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             
             if(metrics) metrics->update(predictions, batch_y);
             
-            backward(batch_y, predictions);
+            backward(loss_function->gradient(predictions, batch_y));
         }
         
         if ((epoch + 1) % 10 == 0 || epoch == 0) {
@@ -93,6 +94,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
 
 template <Numeric T>
 void NeuralNetwork<T>::evaluate(const Tensor<T>& X, const Tensor<T>& y) {
+    model->eval();
     if(metrics) {
         metrics->reset();
         metrics->update(forward(X), y.squeeze());

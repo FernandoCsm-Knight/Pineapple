@@ -9,6 +9,21 @@ Layer<T>::~Layer() {
 }
 
 template <Numeric T>
+void Layer<T>::train() {
+   training = true;
+}
+
+template <Numeric T>
+void Layer<T>::eval() {
+    training = false;
+}
+
+template <Numeric T>
+bool Layer<T>::is_in_train_mode() {
+    return training;
+}
+
+template <Numeric T>
 bool Layer<T>::is_activation() const {
     return false;
 } 
