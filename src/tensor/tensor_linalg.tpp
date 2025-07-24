@@ -3,8 +3,18 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
+#ifdef PINEAPPLE_CUDA_ENABLED
+#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#endif
+
 template <Numeric T>
 T Tensor<T>::norm() const {
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        return cuda_ops::launch_tensor_norm(this->data, this->length());
+    }
+#endif
+    
     T sum = 0;
 
     #pragma omp parallel for reduction(+:sum)
@@ -130,6 +140,53 @@ Tensor<T> Tensor<T>::flip(std::vector<int> axes) const {
     }
     
     Tensor<T> result(this->shape());
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        // Prepare shape and stride arrays for GPU
+        std::vector<int> shape_vec(this->ndim());
+        std::vector<int> strides_vec(this->ndim());
+        std::vector<int> result_strides_vec(this->ndim());
+        
+        for(int i = 0; i < this->ndim(); ++i) {
+            shape_vec[i] = this->shape(i);
+            strides_vec[i] = this->stride[i];
+            result_strides_vec[i] = result.stride[i];
+        }
+        
+        // Allocate GPU memory for arrays
+        int* d_shape = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_axes = cuda_ops::cuda_malloc<int>(axes.size());
+        int* d_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_result_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        
+        // Copy arrays to GPU
+        cudaMemcpy(d_shape, shape_vec.data(), this->ndim() * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_axes, axes.data(), axes.size() * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_strides, strides_vec.data(), this->ndim() * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_result_strides, result_strides_vec.data(), this->ndim() * sizeof(int), cudaMemcpyHostToDevice);
+        
+        cuda_ops::launch_tensor_flip(this->data, result.data, d_shape, d_axes,
+                                    d_strides, d_result_strides,
+                                    this->ndim(), axes.size(), this->length());
+        
+        // Free GPU arrays
+        cuda_ops::cuda_free(d_shape);
+        cuda_ops::cuda_free(d_axes);
+        cuda_ops::cuda_free(d_strides);
+        cuda_ops::cuda_free(d_result_strides);
+        
+        return result;
+    }
+#endif
     
     std::vector<int> idx_input(this->ndim(), 0);
     std::vector<int> idx_output(this->ndim(), 0);
@@ -286,6 +343,11 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::convolve(const Tensor<U>& kernel, in
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
+    // Ensure both tensors are on the same device
+    if (this->device != other.device) {
+        throw std::invalid_argument("Tensors must be on the same device for operations");
+    }
+    
     if (this->ndim() > 2 || other.ndim() > 2) {
         throw std::invalid_argument("Tensors must have at most 2 dimensions");
     }
@@ -319,6 +381,21 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
     }
     
     Tensor<R> result(result_shape);
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU && this->ndim() == 2 && other.ndim() == 2) {
+        // Use CUDA kernel for matrix multiplication
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<R>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_matmul(this->data, other.data, result.data, m, p, n);
+        return result;
+    }
+#endif
     
     #pragma omp parallel for collapse(2)
     for (int i = 0; i < m; ++i) {
@@ -355,6 +432,20 @@ Tensor<T> Tensor<T>::transpose() const {
     }
 
     Tensor<T> result(this->shape(1), this->shape(0));
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_transpose(this->data, result.data, this->shape(0), this->shape(1));
+        return result;
+    }
+#endif
 
     #pragma omp parallel for collapse(2)
     for(int i = 0; i < this->shape(0); ++i) {

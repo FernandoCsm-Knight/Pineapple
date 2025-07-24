@@ -12,6 +12,7 @@
 #include <omp.h>
 
 #include "../types/numeric.hpp"
+#include "../types/device.hpp"
 #include "../abstract/shapeable.hpp"
 
 template <Numeric T> class Tensor: public Shapeable {
@@ -21,6 +22,7 @@ template <Numeric T> class Tensor: public Shapeable {
         T* data = nullptr;
         int* stride = nullptr;
         bool owns_data = true;
+        Device device = Device::CPU;
 
         // Private methods
 
@@ -49,6 +51,50 @@ template <Numeric T> class Tensor: public Shapeable {
             const U& scalar, 
             std::function<void(T&, const U&)> callback
         );
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+        // Helper functions for CUDA operations
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> cuda_binary_op(
+            const Tensor<U>& other,
+            void (*cuda_kernel)(const T*, const U*, std::common_type_t<T, U>*, size_t)
+        ) const;
+
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> cuda_scalar_op(
+            const U& scalar,
+            void (*cuda_kernel)(const T*, U, std::common_type_t<T, U>*, size_t)
+        ) const;
+
+        template <Numeric U>
+        Tensor<T>& cuda_inplace_tensor_op(
+            const Tensor<U>& other,
+            void (*cuda_kernel)(T*, const U*, size_t)
+        );
+
+        template <Numeric U>
+        Tensor<T>& cuda_inplace_scalar_op(
+            const U& scalar,
+            void (*cuda_kernel)(T*, U, size_t)
+        );
+
+        // Helper functions for CUDA boolean operations
+        template <Numeric U>
+        Tensor<bool> cuda_comparison_op(
+            const Tensor<U>& other,
+            void (*cuda_kernel)(const T*, const U*, bool*, size_t)
+        ) const;
+
+        template <Numeric U>
+        Tensor<bool> cuda_scalar_comparison_op(
+            const U& scalar,
+            void (*cuda_kernel)(const T*, U, bool*, size_t)
+        ) const;
+
+        bool cuda_reduction_op(
+            bool (*cuda_kernel)(const T*, size_t)
+        ) const;
+#endif
 
         // Private Constructor
 
@@ -232,7 +278,7 @@ template <Numeric T> class Tensor: public Shapeable {
         Tensor<T> argmax(int axis = 0) const;
         Tensor<T> sum(int axis = -1, bool keep_dimension = false) const;
         Tensor<T> pow(double exponent) const;
-        Tensor<T> normilize() const;
+        Tensor<T> normalize() const;
         Tensor<T> abs() const;
 
         void append(const Tensor<T>& other, int axis = 0);
@@ -250,6 +296,12 @@ template <Numeric T> class Tensor: public Shapeable {
 
         template <Numeric U>
         Tensor<std::common_type_t<T, U>> convolve(const Tensor<U>& kernel, int stride = 1, Correlation mode = Correlation::valid, int padding = 0) const;
+
+        // Device management
+        
+        void to(Device target_device);
+        Device get_device() const;
+        bool is_cuda() const;
 
         // Formatted tensors
 
@@ -314,5 +366,6 @@ template <Numeric T> class Tensor: public Shapeable {
 #include "../../src/tensor/tensor_access.tpp"
 #include "../../src/tensor/tensor_boolean.tpp"
 #include "../../src/tensor/tensor_linalg.tpp"
+#include "../../src/tensor/tensor_cuda.tpp"
 
 #endif 

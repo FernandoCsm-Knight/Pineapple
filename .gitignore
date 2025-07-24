@@ -407,3 +407,5 @@ FodyWeavers.xsd
 
 # Lib directory
 lib/
+
+.vscode/

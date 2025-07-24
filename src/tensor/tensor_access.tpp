@@ -18,7 +18,9 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) {
             subview_shape.add_dimension(this->shape(i));
     }
 
-    return Tensor<T>(this->data + offset, subview_shape, subview_stride);
+    Tensor<T> result(this->data + offset, subview_shape, subview_stride);
+    result.device = this->device;  // Maintain device consistency
+    return result;
 }
 
 template <Numeric T>
@@ -36,7 +38,9 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) const {
             subview_shape.add_dimension(this->shape(i));
     }
 
-    return Tensor<T>(this->data + offset, subview_shape, subview_stride);
+    Tensor<T> result(this->data + offset, subview_shape, subview_stride);
+    result.device = this->device;  // Maintain device consistency
+    return result;
 }
 
 template <Numeric T>

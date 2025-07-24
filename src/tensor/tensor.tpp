@@ -3,6 +3,10 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
+#ifdef PINEAPPLE_CUDA_ENABLED
+#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#endif
+
 // Helper methods
 
 template <Numeric T>
@@ -114,6 +118,12 @@ T* Tensor<T>::data_ptr() const {
 
 template <Numeric T>
 T Tensor<T>::min() const {
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        return cuda_ops::launch_tensor_min(this->data, this->length());
+    }
+#endif
+    
     T min_element = this->data[0];
 
     #pragma omp parallel for reduction(min:min_element)
@@ -126,6 +136,12 @@ T Tensor<T>::min() const {
 
 template <Numeric T>
 T Tensor<T>::max() const {
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        return cuda_ops::launch_tensor_max(this->data, this->length());
+    }
+#endif
+    
     T max_element = this->data[0];
 
     #pragma omp parallel for reduction(max:max_element)
@@ -137,11 +153,25 @@ T Tensor<T>::max() const {
 }
 
 template <Numeric T>
-Tensor<T> Tensor<T>::normilize() const {
+Tensor<T> Tensor<T>::normalize() const {
     T min_val = this->min();
     T max_val = this->max();
     
     Tensor<T> result(this->shape());
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_normalize(this->data, result.data, min_val, max_val, this->length());
+        return result;
+    }
+#endif
 
     #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
@@ -161,6 +191,8 @@ Tensor<T> Tensor<T>::argmax(int axis) const {
     for(int i = 0; i < this->ndim(); ++i) {
         if(i != axis) {
             result_shape.add_dimension(this->shape(i));
+        } else {
+            result_shape.add_dimension(1);
         }
     }
     
@@ -214,9 +246,16 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(result_shape);
         } 
 
-        #pragma omp parallel for reduction(+:total)
-        for(size_t i = 0; i < this->length(); ++i) {
-            total += this->data[i];
+#ifdef PINEAPPLE_CUDA_ENABLED
+        if (this->device == Device::GPU) {
+            total = cuda_ops::launch_tensor_sum(this->data, this->length());
+        } else
+#endif
+        {
+            #pragma omp parallel for reduction(+:total)
+            for(size_t i = 0; i < this->length(); ++i) {
+                total += this->data[i];
+            }
         }
 
         result[0] = total;
@@ -235,6 +274,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
         }
         
         result = Tensor<T>(result_shape);
+        result.device = this->device;
         
         int axis_stride = 1;
         for(int i = this->ndim() - 1; i > axis; --i) {
@@ -268,6 +308,20 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
 template <Numeric T>
 Tensor<T> Tensor<T>::pow(double exponent) const {
     Tensor<T> result(this->shape());
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_pow(this->data, result.data, exponent, this->length());
+        return result;
+    }
+#endif
 
     #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
@@ -279,30 +333,78 @@ Tensor<T> Tensor<T>::pow(double exponent) const {
 
 template <Numeric T>
 T Tensor<T>::mean() const {
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        return this->length() == 0 ? 0 : cuda_ops::launch_tensor_sum(this->data, this->length()) / this->length();
+    }
+#endif
     return this->length() == 0 ? 0 : sum().value() / this->length();
 }
 
 template <Numeric T>
 T Tensor<T>::var() const {
-    T sum = 0;
     T mean_value = mean();
 
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        return cuda_ops::launch_tensor_variance(this->data, mean_value, this->length());
+    }
+#endif
+
+    T sum = 0;
     #pragma omp parallel for reduction(+:sum)
     for(size_t i = 0; i < this->length(); ++i) {
         sum += (this->data[i] - mean_value) * (this->data[i] - mean_value);
     }
 
-    return sum / this->length();
+    return sum / (this->length() - 1);
 }
 
 template <Numeric T>
 T Tensor<T>::std() const {
-    return std::sqrt(var());
+    T variance = var();
+    
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        // Para GPU, calculamos sqrt diretamente
+        T* d_variance;
+        T* d_result;
+        d_variance = cuda_ops::cuda_malloc<T>(1);
+        d_result = cuda_ops::cuda_malloc<T>(1);
+        
+        cuda_ops::cuda_memcpy_host_to_device(d_variance, &variance, 1);
+        cuda_ops::launch_tensor_sqrt(d_variance, d_result, 1);
+        
+        T result;
+        cuda_ops::cuda_memcpy_device_to_host(&result, d_result, 1);
+        
+        cuda_ops::cuda_free(d_variance);
+        cuda_ops::cuda_free(d_result);
+        
+        return result;
+    }
+#endif
+    
+    return std::sqrt(variance);
 }
 
 template <Numeric T>
 Tensor<T> Tensor<T>::abs() const {
     Tensor<T> result(this->shape());
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_abs(this->data, result.data, this->length());
+        return result;
+    }
+#endif
 
     #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {
@@ -314,6 +416,13 @@ Tensor<T> Tensor<T>::abs() const {
 
 template <Numeric T>
 void Tensor<T>::fill(const T& value) {
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        cuda_ops::launch_tensor_fill(this->data, value, this->length());
+        return;
+    }
+#endif
+
     #pragma omp parallel for if(this->length() > 1000)
     for(size_t i = 0; i < this->length(); ++i) {
         this->data[i] = value;
@@ -329,14 +438,27 @@ Tensor<T> Tensor<T>::squeeze() const {
     
     const bool valid = new_shape != this->shape();
     Tensor<T> result(new_shape);
+    result.device = this->device;
 
     if(valid) {
-        #pragma omp parallel for if(this->length() > 1000)
-        for(size_t i = 0; i < this->length(); ++i) {
-            result.data[i] = this->data[i];
+#ifdef PINEAPPLE_CUDA_ENABLED
+        if (this->device == Device::GPU) {
+            if (result.owns_data) {
+                delete[] result.data;
+            }
+            result.data = cuda_ops::cuda_malloc<T>(result.length());
+            result.owns_data = true;
+            
+            cuda_ops::launch_tensor_copy(this->data, result.data, this->length());
+        } else
+#endif
+        {
+            #pragma omp parallel for if(this->length() > 1000)
+            for(size_t i = 0; i < this->length(); ++i) {
+                result.data[i] = this->data[i];
+            }
         }
     }
-    
     
     return valid ? result : *this;
 }
@@ -344,17 +466,31 @@ Tensor<T> Tensor<T>::squeeze() const {
 template <Numeric T>
 Tensor<T> Tensor<T>::unsqueeze(int idx) const {
     if(idx < 0 || idx > this->ndim()) {
-        throw std::out_of_range("Insert position out of range");
+        throw std::invalid_argument("Insert position out of range");
     }
     
     Shape new_shape = this->shape();
     new_shape.unsqueeze(idx);
     
     Tensor<T> result(new_shape);
-    
-    #pragma omp parallel for if(this->length() > 1000)
-    for(size_t i = 0; i < this->length(); ++i) {
-        result.data[i] = this->data[i];
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_copy(this->data, result.data, this->length());
+    } else
+#endif
+    {
+        #pragma omp parallel for if(this->length() > 1000)
+        for(size_t i = 0; i < this->length(); ++i) {
+            result.data[i] = this->data[i];
+        }
     }
     
     return result;
@@ -367,10 +503,24 @@ Tensor<T> Tensor<T>::reshape(Shape new_shape) const {
     }
 
     Tensor<T> result(new_shape);
+    result.device = this->device;
 
-    #pragma omp parallel for if(this->length() > 1000)
-    for(size_t i = 0; i < this->length(); ++i) {
-        result.data[i] = this->data[i];
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_copy(this->data, result.data, this->length());
+    } else
+#endif
+    {
+        #pragma omp parallel for if(this->length() > 1000)
+        for(size_t i = 0; i < this->length(); ++i) {
+            result.data[i] = this->data[i];
+        }
     }
 
     return result;
@@ -390,10 +540,20 @@ Tensor<T> Tensor<T>::slice(int start, int end, int step) const {
     int new_size = (end - start) / step;
     Tensor<T> result(new_size);
 
-    #pragma omp parallel for
-    for(int i = 0; i < new_size; ++i) {
-        result.data[i] = this->data[start + i * step];
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        // Aloca dados para GPU se necessário
+        result.to(Device::GPU);
+        cuda_ops::launch_tensor_slice(this->data, result.data, start, step, new_size);
+    } else {
+#endif
+        #pragma omp parallel for
+        for(int i = 0; i < new_size; ++i) {
+            result.data[i] = this->data[start + i * step];
+        }
+#ifdef PINEAPPLE_CUDA_ENABLED
     }
+#endif
 
     return result;
 }
@@ -412,6 +572,20 @@ std::set<T> Tensor<T>::unique() const {
 template <Numeric T>
 Tensor<T> Tensor<T>::clip(const T& min_val, const T& max_val) const {
     Tensor<T> result(this->shape());
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        cuda_ops::launch_tensor_clip(this->data, result.data, min_val, max_val, this->length());
+        return result;
+    }
+#endif
 
     #pragma omp parallel for
     for(size_t i = 0; i < this->length(); ++i) {

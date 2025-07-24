@@ -3,6 +3,10 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
+#ifdef PINEAPPLE_CUDA_ENABLED
+#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#endif
+
 // Private Constructor
 
 template <Numeric T>
@@ -87,17 +91,26 @@ Tensor<T>::Tensor(const Shape& shape, const T& value): Shapeable(shape) {
 
 template <Numeric T>
 Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other) { 
-    data = new T[this->length()]();
-    stride = new int[this->ndim()];
+    device = other.device;
     owns_data = true;
 
-    for(int i = 0; i < this->ndim(); ++i) {
-        stride[i] = other.stride[i];
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (device == Device::GPU) {
+        data = cuda_ops::cuda_malloc<T>(this->length());
+        cuda_ops::cuda_memcpy_device_to_device(data, other.data, this->length());
+    } else
+#endif
+    {
+        data = new T[this->length()]();
+        #pragma omp parallel for if(this->length() > 1000)
+        for(size_t i = 0; i < this->length(); ++i) {
+            data[i] = other.data[i];
+        }
     }
 
-    #pragma omp parallel for if(this->length() > 1000)
-    for(size_t i = 0; i < this->length(); ++i) {
-        data[i] = other.data[i];
+    stride = new int[this->ndim()];
+    for(int i = 0; i < this->ndim(); ++i) {
+        stride[i] = other.stride[i];
     }
 }
 
@@ -106,6 +119,7 @@ Tensor<T>::Tensor(Tensor<T>&& other) noexcept: Shapeable(std::move(other)) {
     data = other.data;
     stride = other.stride;
     owns_data = other.owns_data;
+    device = other.device;
     other.stride = nullptr;
     other.data = nullptr;
 }
@@ -132,7 +146,14 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
 template <Numeric T>
 Tensor<T>::~Tensor() {
     if(owns_data) {
-        delete[] data;
+#ifdef PINEAPPLE_CUDA_ENABLED
+        if (device == Device::GPU) {
+            cuda_ops::cuda_free(data);
+        } else
+#endif
+        {
+            delete[] data;
+        }
         delete[] stride;
     }
 
@@ -146,11 +167,27 @@ template <Numeric T>
 Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
     if(this != &other) {
         if(owns_data) {
-            delete[] this->data;
+#ifdef PINEAPPLE_CUDA_ENABLED
+            if (device == Device::GPU) {
+                cuda_ops::cuda_free(this->data);
+            } else
+#endif
+            {
+                delete[] this->data;
+            }
             delete[] stride;
     
             this->sh = other.shape();
-            this->data = new T[this->length()]();
+            device = other.device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+            if (device == Device::GPU) {
+                this->data = cuda_ops::cuda_malloc<T>(this->length());
+            } else
+#endif
+            {
+                this->data = new T[this->length()]();
+            }
 
             stride = other.is_scalar() ? nullptr : new int[this->ndim()];
             for(int i = 0; i < this->ndim(); ++i) {
@@ -159,14 +196,56 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
         }
 
         if(other.is_scalar()) {
-            #pragma omp parallel for if(this->length() > 1000)
-            for(size_t i = 0; i < this->length(); ++i) {
-                this->data[i] = other.data[0];
+#ifdef PINEAPPLE_CUDA_ENABLED
+            if (device == Device::GPU) {
+                if (other.device == Device::GPU) {
+                    // Both GPU: copy scalar from GPU
+                    cuda_ops::launch_tensor_copy(other.data, this->data, 1);
+                    cuda_ops::launch_tensor_fill(this->data, this->data[0], this->length()); // This won't work!
+                    // Better approach: create a kernel that fills with GPU scalar
+                    T scalar_value;
+                    cuda_ops::cuda_memcpy_device_to_host(&scalar_value, other.data, 1);
+                    cuda_ops::launch_tensor_fill(this->data, scalar_value, this->length());
+                } else {
+                    // GPU destination, CPU source
+                    cuda_ops::launch_tensor_fill(this->data, other.data[0], this->length());
+                }
+            } else
+#endif
+            {
+                T scalar_value;
+#ifdef PINEAPPLE_CUDA_ENABLED
+                if (other.device == Device::GPU) {
+                    // CPU destination, GPU source
+                    cuda_ops::cuda_memcpy_device_to_host(&scalar_value, other.data, 1);
+                } else
+#endif
+                {
+                    // Both CPU
+                    scalar_value = other.data[0];
+                }
+                
+                #pragma omp parallel for if(this->length() > 1000)
+                for(size_t i = 0; i < this->length(); ++i) {
+                    this->data[i] = scalar_value;
+                }
             }
         } else {
-            #pragma omp parallel for if(this->length() > 1000)
-            for(size_t i = 0; i < this->length(); ++i) {
-                this->data[i] = other.data[i];
+#ifdef PINEAPPLE_CUDA_ENABLED
+            if (device == Device::GPU && other.device == Device::GPU) {
+                cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
+            } else if (device == Device::GPU && other.device == Device::CPU) {
+                cuda_ops::cuda_memcpy_host_to_device(this->data, other.data, this->length());
+            } else if (device == Device::CPU && other.device == Device::GPU) {
+                cuda_ops::cuda_memcpy_device_to_host(this->data, other.data, this->length());
+            } else
+#endif
+            {
+                // Both CPU
+                #pragma omp parallel for if(this->length() > 1000)
+                for(size_t i = 0; i < this->length(); ++i) {
+                    this->data[i] = other.data[i];
+                }
             }
         }
     }
