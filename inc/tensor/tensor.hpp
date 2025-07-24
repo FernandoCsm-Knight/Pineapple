@@ -53,7 +53,6 @@ template <Numeric T> class Tensor: public Shapeable {
         );
 
 #ifdef PINEAPPLE_CUDA_ENABLED
-        // Helper functions for CUDA operations
         template <Numeric U>
         Tensor<std::common_type_t<T, U>> cuda_binary_op(
             const Tensor<U>& other,

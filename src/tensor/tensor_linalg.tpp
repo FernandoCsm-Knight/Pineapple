@@ -45,6 +45,62 @@ Tensor<T> Tensor<T>::dilate(int size, std::vector<int> axes) const {
     }
     
     Tensor<T> result(new_shape, T(0));
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        // Prepare shape and stride arrays for GPU
+        std::vector<int> input_shape_vec(this->ndim());
+        std::vector<int> output_shape_vec(this->ndim());
+        std::vector<int> input_strides_vec(this->ndim());
+        std::vector<int> output_strides_vec(this->ndim());
+        
+        for(int i = 0; i < this->ndim(); ++i) {
+            input_shape_vec[i] = this->shape(i);
+            output_shape_vec[i] = new_shape[i];
+            input_strides_vec[i] = this->stride[i];
+            output_strides_vec[i] = result.stride[i];
+        }
+        
+        // Allocate GPU memory for arrays
+        int* d_input_shape = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_output_shape = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_input_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_output_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_axes = cuda_ops::cuda_malloc<int>(axes.size());
+        
+        // Copy arrays to GPU
+        cuda_ops::cuda_memcpy_host_to_device(d_input_shape, input_shape_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_output_shape, output_shape_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_input_strides, input_strides_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_output_strides, output_strides_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_axes, axes.data(), axes.size());
+        
+        // Fill with zeros first
+        cuda_ops::launch_tensor_fill(result.data, T(0), result.length());
+        
+        cuda_ops::launch_tensor_dilate(this->data, result.data,
+                                      d_input_shape, d_output_shape,
+                                      d_input_strides, d_output_strides,
+                                      d_axes, axes.size(), size,
+                                      this->ndim(), result.length());
+        
+        // Free GPU arrays
+        cuda_ops::cuda_free(d_input_shape);
+        cuda_ops::cuda_free(d_output_shape);
+        cuda_ops::cuda_free(d_input_strides);
+        cuda_ops::cuda_free(d_output_strides);
+        cuda_ops::cuda_free(d_axes);
+        
+        return result;
+    }
+#endif
     
     std::vector<int> input_idx(this->ndim(), 0);
     std::vector<int> output_idx(this->ndim(), 0);
@@ -95,6 +151,62 @@ Tensor<T> Tensor<T>::pad(int size, std::vector<int> axes) const {
     }
     
     Tensor<T> result(new_shape, T(0));
+    result.device = this->device;
+
+#ifdef PINEAPPLE_CUDA_ENABLED
+    if (this->device == Device::GPU) {
+        if (result.owns_data) {
+            delete[] result.data;
+        }
+        result.data = cuda_ops::cuda_malloc<T>(result.length());
+        result.owns_data = true;
+        
+        // Prepare shape and stride arrays for GPU
+        std::vector<int> input_shape_vec(this->ndim());
+        std::vector<int> output_shape_vec(this->ndim());
+        std::vector<int> input_strides_vec(this->ndim());
+        std::vector<int> output_strides_vec(this->ndim());
+        
+        for(int i = 0; i < this->ndim(); ++i) {
+            input_shape_vec[i] = this->shape(i);
+            output_shape_vec[i] = new_shape[i];
+            input_strides_vec[i] = this->stride[i];
+            output_strides_vec[i] = result.stride[i];
+        }
+        
+        // Allocate GPU memory for arrays
+        int* d_input_shape = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_output_shape = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_input_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_output_strides = cuda_ops::cuda_malloc<int>(this->ndim());
+        int* d_axes = cuda_ops::cuda_malloc<int>(axes.size());
+        
+        // Copy arrays to GPU
+        cuda_ops::cuda_memcpy_host_to_device(d_input_shape, input_shape_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_output_shape, output_shape_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_input_strides, input_strides_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_output_strides, output_strides_vec.data(), this->ndim());
+        cuda_ops::cuda_memcpy_host_to_device(d_axes, axes.data(), axes.size());
+        
+        // Fill with zeros first
+        cuda_ops::launch_tensor_fill(result.data, T(0), result.length());
+        
+        cuda_ops::launch_tensor_pad(this->data, result.data,
+                                   d_input_shape, d_output_shape,
+                                   d_input_strides, d_output_strides,
+                                   d_axes, axes.size(), size,
+                                   this->ndim(), result.length());
+        
+        // Free GPU arrays
+        cuda_ops::cuda_free(d_input_shape);
+        cuda_ops::cuda_free(d_output_shape);
+        cuda_ops::cuda_free(d_input_strides);
+        cuda_ops::cuda_free(d_output_strides);
+        cuda_ops::cuda_free(d_axes);
+        
+        return result;
+    }
+#endif
     
     std::vector<int> input_idx(this->ndim(), 0);
     std::vector<int> output_idx(this->ndim(), 0);
@@ -343,7 +455,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::convolve(const Tensor<U>& kernel, in
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
-    // Ensure both tensors are on the same device
     if (this->device != other.device) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
@@ -376,7 +487,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
         result_shape = Shape(m);
     } else {
         // Matrix x Matrix: (m, n) x (n, p) = (m, p)
-        // NUNCA remover dimensões singleton aqui
         result_shape = Shape(m, p);
     }
     
@@ -384,15 +494,21 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
     result.device = this->device;
 
 #ifdef PINEAPPLE_CUDA_ENABLED
-    if (this->device == Device::GPU && this->ndim() == 2 && other.ndim() == 2) {
-        // Use CUDA kernel for matrix multiplication
+    if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
         }
         result.data = cuda_ops::cuda_malloc<R>(result.length());
         result.owns_data = true;
         
-        cuda_ops::launch_tensor_matmul(this->data, other.data, result.data, m, p, n);
+        bool a_is_vector = (this->ndim() == 1);
+        bool b_is_vector = (other.ndim() == 1);
+        
+        cuda_ops::launch_tensor_dot(this->data, other.data, result.data,
+                                            m, n, n, p, 
+                                            result_shape.is_scalar() ? 1 : (result_shape.ndim() == 1 ? result_shape[0] : result_shape[0]),
+                                            result_shape.is_scalar() ? 1 : (result_shape.ndim() == 1 ? 1 : result_shape[1]),
+                                            a_is_vector, b_is_vector);
         return result;
     }
 #endif
@@ -403,7 +519,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
             R sum = 0;
             
             for (int k = 0; k < n; ++k) {
-                int idx1 = (this->ndim() == 1) ? k : i * stride[0] + k * stride[1];
+                int idx1 = (this->ndim() == 1) ? k : i * this->stride[0] + k * this->stride[1];
                 int idx2 = (other.ndim() == 1) ? k : k * other.stride[0] + j * other.stride[1];
                 
                 sum += static_cast<R>(this->data[idx1]) * static_cast<R>(other.data[idx2]);

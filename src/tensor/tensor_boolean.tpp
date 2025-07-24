@@ -238,32 +238,38 @@ Tensor<bool> Tensor<T>::operator!() const {
 
 template <Numeric T>
 bool Tensor<T>::any() const {
+    bool result = false;
+
 #ifdef PINEAPPLE_CUDA_ENABLED
     if (this->device == Device::GPU) {
-        return cuda_reduction_op(cuda_ops::launch_tensor_any<T>);
-    }
+        result = cuda_reduction_op(cuda_ops::launch_tensor_any<T>);
+    } else
 #endif
-    for (size_t i = 0; i < length(); ++i) {
-        if (static_cast<bool>(data[i])) {
-            return true;
+    {
+        for(size_t i = 0; !result && i < length(); ++i) {
+            result = static_cast<bool>(data[i]);
         }
     }
-    return false;
+    
+    return result;
 }
 
 template <Numeric T>
 bool Tensor<T>::all() const {
+    bool result = true;
+
 #ifdef PINEAPPLE_CUDA_ENABLED
     if (this->device == Device::GPU) {
-        return cuda_reduction_op(cuda_ops::launch_tensor_all<T>);
-    }
+        result = cuda_reduction_op(cuda_ops::launch_tensor_all<T>);
+    } else
 #endif
-    for (size_t i = 0; i < length(); ++i) {
-        if (!static_cast<bool>(data[i])) {
-            return false;
+    {
+        for(size_t i = 0; result && i < length(); ++i) {
+            result = static_cast<bool>(data[i]);
         }
     }
-    return true;
+
+    return result;
 }
 
 #endif

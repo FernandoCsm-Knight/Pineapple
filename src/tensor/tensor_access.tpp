@@ -19,7 +19,7 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) {
     }
 
     Tensor<T> result(this->data + offset, subview_shape, subview_stride);
-    result.device = this->device;  // Maintain device consistency
+    result.device = this->device;
     return result;
 }
 
@@ -39,7 +39,7 @@ Tensor<T> Tensor<T>::operator()(Indices... indices) const {
     }
 
     Tensor<T> result(this->data + offset, subview_shape, subview_stride);
-    result.device = this->device;  // Maintain device consistency
+    result.device = this->device;
     return result;
 }
 

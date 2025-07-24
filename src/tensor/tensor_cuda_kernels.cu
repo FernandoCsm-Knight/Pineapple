@@ -78,21 +78,11 @@ __global__ void tensor_copy_kernel(const T* src, T* dst, size_t size) {
     if(idx < size) dst[idx] = src[idx];
 }
 
-// Kernel para multiplicação de matrizes (dot product)
-template<typename T, typename U, typename R>
-__global__ void tensor_matmul_kernel(const T* a, const U* b, R* result, int M, int N, int K) {
-    const int row = blockIdx.y * blockDim.y + threadIdx.y;
-    const int col = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if(row < M && col < N) {
-        R sum = 0;
-        
-        for(int k = 0; k < K; ++k) {
-            sum += static_cast<R>(a[row * K + k]) * static_cast<R>(b[k * N + col]);
-        }
-
-        result[row * N + col] = sum;
-    }
+// Kernel para conversão de tipo
+template<typename T, typename U>
+__global__ void tensor_type_convert_kernel(const U* src, T* dst, size_t size) {
+    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx < size) dst[idx] = static_cast<T>(src[idx]);
 }
 
 // Kernels para operações de redução
@@ -201,22 +191,19 @@ __global__ void tensor_flip_kernel(const T* a, T* result, const int* shape, cons
     const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
     
     if(idx < size) {
-        // Calculate multi-dimensional indices from linear index
         size_t temp_idx = idx;
-        int indices[8]; // Assume max 8 dimensions
+        int indices[8];
         
         for(int i = 0; i < ndim; ++i) {
             indices[i] = temp_idx / strides[i];
             temp_idx %= strides[i];
         }
         
-        // Flip indices for specified axes
         for(int i = 0; i < num_axes; ++i) {
             int axis = axes[i];
             indices[axis] = shape[axis] - 1 - indices[axis];
         }
         
-        // Calculate result linear index
         size_t result_idx = 0;
         for(int i = 0; i < ndim; ++i) {
             result_idx += indices[i] * result_strides[i];
@@ -363,6 +350,159 @@ template<typename T>
 __global__ void tensor_sqrt_kernel(const T* data, T* result, size_t size) {
     const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx < size) result[idx] = sqrt(data[idx]);
+}
+
+// Dilate kernel
+template<typename T>
+__global__ void tensor_dilate_kernel(const T* input, T* output, 
+                                    const int* input_shape, const int* output_shape,
+                                    const int* input_strides, const int* output_strides,
+                                    const int* axes, int num_axes, int dilation_size,
+                                    int ndim, size_t output_size) {
+    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(idx < output_size) {
+        size_t temp_idx = idx;
+        int output_indices[8];
+        
+        for(int i = 0; i < ndim; ++i) {
+            output_indices[i] = temp_idx / output_strides[i];
+            temp_idx %= output_strides[i];
+        }
+        
+        bool is_data_position = true;
+        int input_indices[8];
+        
+        for(int i = 0; i < ndim; ++i) {
+            bool is_dilated_axis = false;
+            for(int j = 0; j < num_axes; ++j) {
+                if(axes[j] == i) {
+                    is_dilated_axis = true;
+                    break;
+                }
+            }
+            
+            if(is_dilated_axis) {
+                if(output_indices[i] % (dilation_size + 1) != 0) {
+                    is_data_position = false;
+                    break;
+                }
+                input_indices[i] = output_indices[i] / (dilation_size + 1);
+            } else {
+                input_indices[i] = output_indices[i];
+            }
+        }
+        
+        if(is_data_position) {
+            size_t input_idx = 0;
+            for(int i = 0; i < ndim; ++i) {
+                input_idx += input_indices[i] * input_strides[i];
+            }
+            output[idx] = input[input_idx];
+        } else {
+            output[idx] = T(0);
+        }
+    }
+}
+
+// Pad kernel
+template<typename T>
+__global__ void tensor_pad_kernel(const T* input, T* output,
+                                 const int* input_shape, const int* output_shape,
+                                 const int* input_strides, const int* output_strides,
+                                 const int* axes, int num_axes, int pad_size,
+                                 int ndim, size_t output_size) {
+    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(idx < output_size) {
+        size_t temp_idx = idx;
+        int output_indices[8];
+        
+        for(int i = 0; i < ndim; ++i) {
+            output_indices[i] = temp_idx / output_strides[i];
+            temp_idx %= output_strides[i];
+        }
+        
+        bool is_input_region = true;
+        int input_indices[8];
+        
+        for(int i = 0; i < ndim; ++i) {
+            bool is_padded_axis = false;
+            for(int j = 0; j < num_axes; ++j) {
+                if(axes[j] == i) {
+                    is_padded_axis = true;
+                    break;
+                }
+            }
+            
+            if(is_padded_axis) {
+                if(output_indices[i] < pad_size || output_indices[i] >= input_shape[i] + pad_size) {
+                    is_input_region = false;
+                    break;
+                }
+                input_indices[i] = output_indices[i] - pad_size;
+            } else {
+                input_indices[i] = output_indices[i];
+            }
+        }
+        
+        if(is_input_region) {
+            size_t input_idx = 0;
+            for(int i = 0; i < ndim; ++i) {
+                input_idx += input_indices[i] * input_strides[i];
+            }
+            output[idx] = input[input_idx];
+        } else {
+            output[idx] = T(0);
+        }
+    }
+}
+
+template<typename T, typename U, typename R>
+__global__ void tensor_dot_kernel(const T* a, const U* b, R* result, 
+                                 int a_rows, int a_cols, int b_rows, int b_cols,
+                                 int result_rows, int result_cols, 
+                                 bool a_is_vector, bool b_is_vector) {
+    const int row = blockIdx.y * blockDim.y + threadIdx.y;
+    const int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(a_is_vector && b_is_vector) {
+        // Vector dot vector (scalar result)
+        if(row == 0 && col == 0) {
+            R sum = 0;
+            for(int k = 0; k < a_cols; ++k) {
+                sum += static_cast<R>(a[k]) * static_cast<R>(b[k]);
+            }
+            result[0] = sum;
+        }
+    } else if(a_is_vector && !b_is_vector) {
+        // Vector x Matrix: (1, n) x (n, p) = (1, p)
+        if(row == 0 && col < result_cols) {
+            R sum = 0;
+            for(int k = 0; k < a_cols; ++k) {
+                sum += static_cast<R>(a[k]) * static_cast<R>(b[k * b_cols + col]);
+            }
+            result[col] = sum;
+        }
+    } else if(!a_is_vector && b_is_vector) {
+        // Matrix x Vector: (m, n) x (n, 1) = (m, 1)
+        if(col == 0 && row < result_rows) {
+            R sum = 0;
+            for(int k = 0; k < a_cols; ++k) {
+                sum += static_cast<R>(a[row * a_cols + k]) * static_cast<R>(b[k]);
+            }
+            result[row] = sum;
+        }
+    } else {
+        // Matrix x Matrix: (m, n) x (n, p) = (m, p)
+        if(row < result_rows && col < result_cols) {
+            R sum = 0;
+            for(int k = 0; k < a_cols; ++k) {
+                sum += static_cast<R>(a[row * a_cols + k]) * static_cast<R>(b[k * b_cols + col]);
+            }
+            result[row * result_cols + col] = sum;
+        }
+    }
 }
 
 #endif

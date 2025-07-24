@@ -10,7 +10,6 @@
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) const {
-    // Ensure both tensors are on the same device
     if(this->device != other.device) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
@@ -29,7 +28,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) const {
-    // Ensure both tensors are on the same device
     if (this->device != other.device) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
@@ -48,7 +46,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) const {
-    // Ensure both tensors are on the same device
     if (this->device != other.device) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
@@ -67,7 +64,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) const {
-    // Ensure both tensors are on the same device
     if (this->device != other.device) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }

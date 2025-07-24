@@ -32,80 +32,21 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::simd_with_tensor(
     std::function<void(std::common_type_t<T, U>&, const T&, const U&)> callback
 ) const {
     Tensor<std::common_type_t<T, U>> result(this->shape());
-    
-    // Ensure both tensors are on the same device
-    if (this->device != other.device) {
-        throw std::invalid_argument("Tensors must be on the same device for operations");
-    }
-    
-    // Set result device to match input tensors
-    result.device = this->device;
-
-#ifdef PINEAPPLE_CUDA_ENABLED
-    if (this->device == Device::GPU) {
-        // Allocate GPU memory for result
-        if (result.owns_data) {
-            delete[] result.data;
-        }
-        result.data = cuda_ops::cuda_malloc<std::common_type_t<T, U>>(result.length());
-        result.owns_data = true;
-    }
-#endif
 
     if(this->shape() == other.shape()) {
-#ifdef PINEAPPLE_CUDA_ENABLED
-        if (this->device == Device::GPU) {
-            // For cross-type operations, we can't directly use CUDA copy
-            // Fall back to CPU for cross-type operations
-            if constexpr (std::is_same_v<T, U>) {
-                cuda_ops::launch_tensor_copy(this->data, result.data, this->length());
-            } else {
-                // For cross-type operations, fall back to CPU processing
-                #pragma omp parallel for
-                for(size_t i = 0; i < length(); ++i) {
-                    callback(result[i], data[i], other.data[i]);
-                }
-            }
-        } else
-#endif
-        {
-            #pragma omp parallel for
-            for(size_t i = 0; i < length(); ++i) {
-                callback(result[i], data[i], other.data[i]);
-            }
+        #pragma omp parallel for
+        for(size_t i = 0; i < length(); ++i) {
+            callback(result[i], data[i], other.data[i]);
         }
     } else if(other.is_scalar()) {
-#ifdef PINEAPPLE_CUDA_ENABLED
-        if (this->device == Device::GPU) {
-            // For cross-type operations, we can't directly use CUDA copy
-            if constexpr (std::is_same_v<T, U>) {
-                cuda_ops::launch_tensor_copy(this->data, result.data, this->length());
-            } else {
-                // For cross-type operations, fall back to CPU processing
-                #pragma omp parallel for
-                for(size_t i = 0; i < length(); ++i) {
-                    callback(result[i], data[i], other.data[0]);
-                }
-            }
-        } else
-#endif
-        {
-            #pragma omp parallel for
-            for(size_t i = 0; i < length(); ++i) {
-                callback(result[i], data[i], other.value());
-            }
+        #pragma omp parallel for
+        for(size_t i = 0; i < length(); ++i) {
+            callback(result[i], data[i], other.value());
         }
     } else if(this->is_scalar()) {
-#ifdef PINEAPPLE_CUDA_ENABLED
-        if (this->device == Device::GPU) {
-            cuda_ops::launch_tensor_copy(other.data, result.data, other.length());
-        } else
-#endif
-        {
-            #pragma omp parallel for
-            for(size_t i = 0; i < other.length(); ++i) {
-                callback(result[i], this->value(), other.data[i]);
-            }
+        #pragma omp parallel for
+        for(size_t i = 0; i < other.length(); ++i) {
+            callback(result[i], this->value(), other.data[i]);
         }
     } else {
         if(!this->can_broadcast(other)) {
@@ -214,7 +155,7 @@ Tensor<T>& Tensor<T>::change_tensor_scalar_simd(
 }
 
 #ifdef PINEAPPLE_CUDA_ENABLED
-// Helper function for CUDA tensor-tensor operations
+
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_binary_op(
@@ -225,7 +166,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_binary_op(
     Tensor<R> result(this->shape());
     result.device = Device::GPU;
     
-    // Allocate GPU memory for result
     if (result.owns_data) {
         delete[] result.data;
     }
@@ -236,7 +176,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_binary_op(
     return result;
 }
 
-// Helper function for CUDA tensor-scalar operations
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_scalar_op(
@@ -247,7 +186,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_scalar_op(
     Tensor<R> result(this->shape());
     result.device = this->device;
     
-    // Allocate GPU memory for result
     if (result.owns_data) {
         delete[] result.data;
     }
@@ -258,7 +196,6 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_scalar_op(
     return result;
 }
 
-// Helper function for CUDA in-place tensor operations
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::cuda_inplace_tensor_op(
@@ -269,7 +206,6 @@ Tensor<T>& Tensor<T>::cuda_inplace_tensor_op(
     return *this;
 }
 
-// Helper function for CUDA in-place scalar operations
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::cuda_inplace_scalar_op(
@@ -280,7 +216,6 @@ Tensor<T>& Tensor<T>::cuda_inplace_scalar_op(
     return *this;
 }
 
-// Helper function for CUDA boolean comparison operations (tensor-tensor)
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::cuda_comparison_op(
@@ -290,7 +225,6 @@ Tensor<bool> Tensor<T>::cuda_comparison_op(
     Tensor<bool> result(this->shape());
     result.device = Device::GPU;
     
-    // Allocate GPU memory for result
     if (result.owns_data) {
         delete[] result.data;
     }
@@ -301,7 +235,6 @@ Tensor<bool> Tensor<T>::cuda_comparison_op(
     return result;
 }
 
-// Helper function for CUDA boolean comparison operations (tensor-scalar)
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::cuda_scalar_comparison_op(
@@ -311,7 +244,6 @@ Tensor<bool> Tensor<T>::cuda_scalar_comparison_op(
     Tensor<bool> result(this->shape());
     result.device = this->device;
     
-    // Allocate GPU memory for result
     if (result.owns_data) {
         delete[] result.data;
     }
@@ -322,13 +254,12 @@ Tensor<bool> Tensor<T>::cuda_scalar_comparison_op(
     return result;
 }
 
-// Helper function for CUDA boolean reduction operations
 template <Numeric T>
 bool Tensor<T>::cuda_reduction_op(
     bool (*cuda_kernel)(const T*, size_t)
 ) const {
     return cuda_kernel(this->data, this->length());
 }
-#endif
 
+#endif
 #endif

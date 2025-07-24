@@ -87,17 +87,6 @@ void launch_tensor_divide(const T* a, const U* b, R* result, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Matrix multiplication
-template<typename T, typename U, typename R>
-void launch_tensor_matmul(const T* a, const U* b, R* result, int M, int N, int K) {
-    dim3 block(16, 16);
-    dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
-    
-    tensor_matmul_kernel<<<grid, block>>>(a, b, result, M, N, K);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-}
-
 // Copy
 template<typename T>
 void launch_tensor_copy(const T* src, T* dst, size_t size) {
@@ -106,6 +95,18 @@ void launch_tensor_copy(const T* src, T* dst, size_t size) {
     dim3 block(block_size);
     
     tensor_copy_kernel<<<grid, block>>>(src, dst, size);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaDeviceSynchronize());
+}
+
+// Type conversion
+template<typename T, typename U>
+void launch_tensor_type_convert(const U* src, T* dst, size_t size) {
+    const int block_size = 256;
+    dim3 grid = calculate_grid_block(size, block_size);
+    dim3 block(block_size);
+    
+    tensor_type_convert_kernel<<<grid, block>>>(src, dst, size);
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
 }
@@ -759,6 +760,71 @@ bool launch_tensor_all(const T* data, size_t size) {
     return final_result;
 }
 
+template<typename T>
+void launch_tensor_dilate(const T* input, T* output,
+                         const int* input_shape, const int* output_shape,
+                         const int* input_strides, const int* output_strides,
+                         const int* axes, int num_axes, int dilation_size,
+                         int ndim, size_t output_size) {
+    const int block_size = 256;
+    dim3 grid = calculate_grid_block(output_size, block_size);
+    dim3 block(block_size);
+    
+    tensor_dilate_kernel<<<grid, block>>>(input, output, input_shape, output_shape,
+                                         input_strides, output_strides, axes, num_axes,
+                                         dilation_size, ndim, output_size);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaDeviceSynchronize());
+}
+
+template<typename T>
+void launch_tensor_pad(const T* input, T* output,
+                      const int* input_shape, const int* output_shape,
+                      const int* input_strides, const int* output_strides,
+                      const int* axes, int num_axes, int pad_size,
+                      int ndim, size_t output_size) {
+    const int block_size = 256;
+    dim3 grid = calculate_grid_block(output_size, block_size);
+    dim3 block(block_size);
+    
+    tensor_pad_kernel<<<grid, block>>>(input, output, input_shape, output_shape,
+                                      input_strides, output_strides, axes, num_axes,
+                                      pad_size, ndim, output_size);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaDeviceSynchronize());
+}
+
+template<typename T, typename U, typename R>
+void launch_tensor_dot(const T* a, const U* b, R* result,
+                               int a_rows, int a_cols, int b_rows, int b_cols,
+                               int result_rows, int result_cols,
+                               bool a_is_vector, bool b_is_vector) {
+    if(a_is_vector && b_is_vector) {
+        dim3 block(1, 1);
+        dim3 grid(1, 1);
+        tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
+                                          result_rows, result_cols, a_is_vector, b_is_vector);
+    } else if(a_is_vector && !b_is_vector) {
+        dim3 block(16, 1);
+        dim3 grid((result_cols + block.x - 1) / block.x, 1);
+        tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
+                                          result_rows, result_cols, a_is_vector, b_is_vector);
+    } else if(!a_is_vector && b_is_vector) {
+        dim3 block(1, 16);
+        dim3 grid(1, (result_rows + block.y - 1) / block.y);
+        tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
+                                          result_rows, result_cols, a_is_vector, b_is_vector);
+    } else {
+        dim3 block(16, 16);
+        dim3 grid((result_cols + block.x - 1) / block.x, (result_rows + block.y - 1) / block.y);
+        tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
+                                          result_rows, result_cols, a_is_vector, b_is_vector);
+    }
+    
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaDeviceSynchronize());
+}
+
 // Explicit instantiations
 template float* cuda_malloc<float>(size_t);
 template void cuda_free<float>(float*);
@@ -789,7 +855,6 @@ template void launch_tensor_add<float, float, float>(const float*, const float*,
 template void launch_tensor_subtract<float, float, float>(const float*, const float*, float*, size_t);
 template void launch_tensor_multiply<float, float, float>(const float*, const float*, float*, size_t);
 template void launch_tensor_divide<float, float, float>(const float*, const float*, float*, size_t);
-template void launch_tensor_matmul<float, float, float>(const float*, const float*, float*, int, int, int);
 template void launch_tensor_copy<float>(const float*, float*, size_t);
 template void launch_tensor_fill<float>(float*, float, size_t);
 
@@ -803,6 +868,17 @@ template void launch_tensor_fill<int>(int*, int, size_t);
 // Operations for double  
 template void launch_tensor_copy<double>(const double*, double*, size_t);
 template void launch_tensor_fill<double>(double*, double, size_t);
+
+// Type conversion operations
+template void launch_tensor_type_convert<float, int>(const int*, float*, size_t);
+template void launch_tensor_type_convert<float, double>(const double*, float*, size_t);
+template void launch_tensor_type_convert<int, float>(const float*, int*, size_t);
+template void launch_tensor_type_convert<int, double>(const double*, int*, size_t);
+template void launch_tensor_type_convert<double, float>(const float*, double*, size_t);
+template void launch_tensor_type_convert<double, int>(const int*, double*, size_t);
+template void launch_tensor_type_convert<bool, float>(const float*, bool*, size_t);
+template void launch_tensor_type_convert<bool, int>(const int*, bool*, size_t);
+template void launch_tensor_type_convert<bool, double>(const double*, bool*, size_t);
 
 // Scalar operations
 template void launch_tensor_scalar_add<float, float, float>(const float*, float, float*, size_t);
@@ -884,5 +960,31 @@ template void launch_tensor_transpose<double>(const double*, double*, int, int);
 template void launch_tensor_flip<float>(const float*, float*, const int*, const int*, const int*, const int*, int, int, size_t);
 template void launch_tensor_flip<int>(const int*, int*, const int*, const int*, const int*, const int*, int, int, size_t);
 template void launch_tensor_flip<double>(const double*, double*, const int*, const int*, const int*, const int*, int, int, size_t);
+
+// Explicit instantiations for new functions
+template void launch_tensor_dilate<float>(const float*, float*, const int*, const int*, 
+                                         const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_dilate<int>(const int*, int*, const int*, const int*, 
+                                       const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_dilate<double>(const double*, double*, const int*, const int*, 
+                                          const int*, const int*, const int*, int, int, int, size_t);
+
+template void launch_tensor_pad<float>(const float*, float*, const int*, const int*, 
+                                      const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_pad<int>(const int*, int*, const int*, const int*, 
+                                    const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_pad<double>(const double*, double*, const int*, const int*, 
+                                       const int*, const int*, const int*, int, int, int, size_t);
+
+template void launch_tensor_dot<float, float, float>(const float*, const float*, float*,
+                                                             int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<int, int, int>(const int*, const int*, int*,
+                                                       int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<double, double, double>(const double*, const double*, double*,
+                                                                int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<float, int, float>(const float*, const int*, float*,
+                                                           int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<int, float, float>(const int*, const float*, float*,
+                                                           int, int, int, int, int, int, bool, bool);
 
 }

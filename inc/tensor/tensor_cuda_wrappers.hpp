@@ -87,6 +87,9 @@ void launch_tensor_fill(T* data, T value, size_t size);
 template<typename T>
 void launch_tensor_copy(const T* src, T* dst, size_t size);
 
+template<typename T, typename U>
+void launch_tensor_type_convert(const U* src, T* dst, size_t size);
+
 template<typename T, typename U, typename R>
 void launch_tensor_matmul(const T* a, const U* b, R* result, int M, int N, int K);
 
@@ -221,6 +224,27 @@ void cuda_memcpy_device_to_host(T* dst, const T* src, size_t size);
 
 template<typename T>
 void cuda_memcpy_device_to_device(T* dst, const T* src, size_t size);
+
+// Advanced linalg operations
+template<typename T>
+void launch_tensor_dilate(const T* input, T* output,
+                         const int* input_shape, const int* output_shape,
+                         const int* input_strides, const int* output_strides,
+                         const int* axes, int num_axes, int dilation_size,
+                         int ndim, size_t output_size);
+
+template<typename T>
+void launch_tensor_pad(const T* input, T* output,
+                      const int* input_shape, const int* output_shape,
+                      const int* input_strides, const int* output_strides,
+                      const int* axes, int num_axes, int pad_size,
+                      int ndim, size_t output_size);
+
+template<typename T, typename U, typename R>
+void launch_tensor_dot(const T* a, const U* b, R* result,
+                               int a_rows, int a_cols, int b_rows, int b_cols,
+                               int result_rows, int result_cols,
+                               bool a_is_vector, bool b_is_vector);
 
 }
 
