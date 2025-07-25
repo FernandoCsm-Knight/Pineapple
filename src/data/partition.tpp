@@ -17,12 +17,12 @@ std::tuple<Shape, Shape, Shape, Shape> Partition<T>::split_shape(float train_rat
 
     for(int i = 1; i < data.ndim(); ++i) {
         train_data_shape.add_dimension(data_shape[i]);
-        test_data_shape.add_dimension(data_shape[i]);
+        if(test_ratio > 0) test_data_shape.add_dimension(data_shape[i]);
     }
 
     for(int i = 1; i < target.ndim(); ++i) {
         train_target_shape.add_dimension(target_shape[i]);
-        test_target_shape.add_dimension(target_shape[i]);
+        if(test_ratio > 0) test_target_shape.add_dimension(target_shape[i]);
     }
 
     return std::make_tuple(train_data_shape, train_target_shape, test_data_shape, test_target_shape);
