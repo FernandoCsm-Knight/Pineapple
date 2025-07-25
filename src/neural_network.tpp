@@ -54,8 +54,13 @@ Tensor<T> NeuralNetwork<T>::backward(const Tensor<T>& grad_output) {
 }
 
 template <Numeric T>
-void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size) {
-    BatchLoader<T> loader(X, y, batch_size, true);
+void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size, float validation) {
+    Partition<T> partition(X, y, true);
+
+    auto [train_data, train_target, validation_data, validation_target] = partition.stratified_split(y, validation);
+
+    BatchLoader<T> train_loader(train_data, train_target, batch_size, true);
+    BatchLoader<T> validation_loader(validation_data, validation_target, batch_size, false);
 
     model->train();
 
@@ -64,10 +69,10 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
 
         if(metrics) metrics->reset();
         
-        for(const auto& [batch_X, batch_y] : loader) {
+        for(const auto& [batch_X, batch_y] : train_loader) {
             Tensor<T> predictions = forward(batch_X);
             
-            T loss = loss_function->compute(predictions, batch_y);
+            const T loss = loss_function->compute(predictions, batch_y);
             total_loss += loss;
             
             if(metrics) metrics->update(predictions, batch_y);
@@ -76,7 +81,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
         }
         
         if ((epoch + 1) % 10 == 0 || epoch == 0) {
-            std::cout << "Época " << (epoch + 1) << ", Loss: " << (total_loss/loader.num_batches());
+            std::cout << "Época " << (epoch + 1) << ", Train Loss: " << (total_loss / train_loader.num_batches());
         
             if(metrics) {
                 std::set<std::string> all_metrics = metrics->all_metrics();
@@ -88,6 +93,34 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             }
 
             std::cout << std::endl;
+        }
+
+        if(validation > 0.0f) {
+            total_loss = 0;
+
+            for(const auto& [val_X, val_y] : validation_loader) {
+                Tensor<T> val_predictions = forward(val_X);
+
+                const T val_loss = loss_function->compute(val_predictions, val_y);
+                total_loss += val_loss;
+                
+                if(metrics) metrics->update(val_predictions, val_y);   
+            }
+
+            if((epoch + 1) % 10 == 0 || epoch == 0) {
+                std::cout << "Época " << (epoch + 1) << ", Validation Loss: " << (total_loss / validation_loader.num_batches());
+                
+                if(metrics) {
+                    std::set<std::string> all_metrics = metrics->all_metrics();
+                    
+                    for(const std::string& metric_name : all_metrics) {
+                        const float metric_value = metrics->compute(metric_name);
+                        std::cout << ", " << metric_name << ": " << metric_value;
+                    }
+                }
+
+                std::cout << std::endl;
+            }
         }
     }
 }
