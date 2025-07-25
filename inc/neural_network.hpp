@@ -11,6 +11,7 @@
 
 #include "layer/sequential.hpp"
 #include "data/batch_loader.hpp"
+#include "data/partition.hpp"
 
 #include "tensor/tensor.hpp"
 
@@ -35,7 +36,7 @@ template <Numeric T> class NeuralNetwork: public Layer<T> {
         Tensor<T> forward(const Tensor<T>& input) override;
         Tensor<T> backward(const Tensor<T>& grad_output) override;
 
-        void train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size = 32);
+        void train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size = 32, float validation = 0.0f);
         void evaluate(const Tensor<T>& X, const Tensor<T>& y);
 
         friend std::ostream& operator<<(std::ostream& os, const NeuralNetwork<T>& nn) {
