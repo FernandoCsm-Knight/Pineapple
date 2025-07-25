@@ -9,8 +9,6 @@
 
 // Device management methods
 
-#ifdef __NVCC__
-
 template <Numeric T>
 void Tensor<T>::to(Device target_device) {
     if(device != target_device) {
@@ -41,8 +39,6 @@ void Tensor<T>::to(Device target_device) {
         #endif
     }
 }
-
-#endif 
 
 template <Numeric T>
 Device Tensor<T>::get_device() const {

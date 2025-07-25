@@ -14,7 +14,15 @@ INCLUDEDIR="$PREFIX/include"
 LIBDIR="$PREFIX/lib"
 PKGCONFIGDIR="$PREFIX/lib/pkgconfig"
 
-# CUDA configuration
+# CUD    if [[ "$CUDA_ENABLED" == "1" ]]; then
+        echo "2. Compile with CUDA support using pkg-config (recommended):"
+        echo "   nvcc --extended-lambda \$(pkg-config --cflags pineapple) -Xcompiler -fopenmp your_file.cpp \$(pkg-config --libs pineapple) -o your_program"
+        echo ""
+        echo "3. Or compile manually with CUDA:"
+        echo "   nvcc --extended-lambda -std=c++20 -I$INCLUDEDIR -Xcompiler -fopenmp your_file.cpp -L$LIBDIR -lpineapple -lcudart -o your_program"
+        echo ""
+        echo "4. For CPU-only compilation (without CUDA features):"
+        echo "   g++ -std=c++20 -I$INCLUDEDIR -fopenmp your_file.cpp -fopenmp -o your_program"ration
 CUDA_ENABLED="${CUDA:-0}"
 CUDA_ARCH="${CUDA_ARCH:-sm_50,sm_60,sm_70,sm_75,sm_80,sm_86}"
 
@@ -103,13 +111,8 @@ EOF
     print_success "Dependencies checked"
 }
 
-compile_cuda_libraries() {
-    if [[ "$CUDA_ENABLED" != "1" ]]; then
-        print_info "CUDA support disabled, skipping CUDA library compilation"
-        return 0
-    fi
-    
-    print_info "Compiling CUDA libraries..."
+compile_libraries() {
+    print_info "Compiling Pineapple libraries..."
     
     # Create temporary build directory
     BUILD_DIR="/tmp/pineapple_build"
@@ -121,52 +124,119 @@ compile_cuda_libraries() {
     
     cd "$BUILD_DIR"
     
-    # Compile CUDA object files
-    print_info "Compiling CUDA kernels..."
-    nvcc --extended-lambda -std=c++20 \
-         -gencode arch=compute_50,code=sm_50 \
-         -gencode arch=compute_60,code=sm_60 \
-         -gencode arch=compute_70,code=sm_70 \
-         -gencode arch=compute_75,code=sm_75 \
-         -gencode arch=compute_80,code=sm_80 \
-         -gencode arch=compute_86,code=sm_86 \
-         -Xcompiler -fPIC,-fopenmp \
-         -Iinc \
-         -c src/tensor/tensor_cuda_kernels.cu \
-         -o tensor_cuda_kernels.o
+    # Find all CUDA and C++ source files
+    CUDA_FILES=$(find src -name "*.cu" | sort)
+    CPP_FILES=$(find src -name "*.cpp" | sort)
     
-    print_info "Compiling CUDA wrappers..."
-    nvcc --extended-lambda -std=c++20 \
-         -gencode arch=compute_50,code=sm_50 \
-         -gencode arch=compute_60,code=sm_60 \
-         -gencode arch=compute_70,code=sm_70 \
-         -gencode arch=compute_75,code=sm_75 \
-         -gencode arch=compute_80,code=sm_80 \
-         -gencode arch=compute_86,code=sm_86 \
-         -Xcompiler -fPIC,-fopenmp \
-         -Iinc \
-         -c src/tensor/tensor_cuda_wrappers.cu \
-         -o tensor_cuda_wrappers.o
-    
-    # Create static library
-    print_info "Creating static library..."
-    ar rcs libpineapple_cuda.a tensor_cuda_kernels.o tensor_cuda_wrappers.o
-    
-    # Create shared library
-    print_info "Creating shared library..."
-    nvcc -shared -Xcompiler -fPIC \
-         tensor_cuda_kernels.o tensor_cuda_wrappers.o \
-         -o libpineapple_cuda.so.${VERSION} \
-         -lcudart
-    
-    # Create version symlinks
-    ln -sf libpineapple_cuda.so.${VERSION} libpineapple_cuda.so.${VERSION%.*}
-    ln -sf libpineapple_cuda.so.${VERSION} libpineapple_cuda.so
+    if [[ "$CUDA_ENABLED" == "1" ]]; then
+        if [[ -z "$CUDA_FILES" && -z "$CPP_FILES" ]]; then
+            print_error "No CUDA (.cu) or C++ (.cpp) source files found in src/"
+            exit 1
+        fi
+        
+        # CUDA compilation flags
+        COMPILER_FLAGS="--extended-lambda -std=c++20 \
+                        -Wno-deprecated-gpu-targets \
+                        -gencode arch=compute_50,code=sm_50 \
+                        -gencode arch=compute_60,code=sm_60 \
+                        -gencode arch=compute_70,code=sm_70 \
+                        -gencode arch=compute_75,code=sm_75 \
+                        -gencode arch=compute_80,code=sm_80 \
+                        -gencode arch=compute_86,code=sm_86 \
+                        -Xcompiler -fPIC,-fopenmp \
+                        -Iinc"
+        
+        # Compile CUDA files
+        OBJECT_FILES=""
+        if [[ -n "$CUDA_FILES" ]]; then
+            print_info "Compiling CUDA source files..."
+            for cu_file in $CUDA_FILES; do
+                obj_name=$(basename "${cu_file%.cu}.o")
+                print_info "  Compiling $cu_file -> $obj_name"
+                nvcc $COMPILER_FLAGS -c "$cu_file" -o "$obj_name"
+                OBJECT_FILES="$OBJECT_FILES $obj_name"
+            done
+        fi
+        
+        # Compile C++ files with nvcc for consistency
+        if [[ -n "$CPP_FILES" ]]; then
+            print_info "Compiling C++ source files..."
+            for cpp_file in $CPP_FILES; do
+                obj_name=$(basename "${cpp_file%.cpp}.o")
+                print_info "  Compiling $cpp_file -> $obj_name"
+                nvcc $COMPILER_FLAGS -c "$cpp_file" -o "$obj_name"
+                OBJECT_FILES="$OBJECT_FILES $obj_name"
+            done
+        fi
+        
+        if [[ -z "$OBJECT_FILES" ]]; then
+            print_error "No object files were generated"
+            exit 1
+        fi
+        
+        # Create static library
+        print_info "Creating static library..."
+        ar rcs libpineapple.a $OBJECT_FILES
+        
+        # Create shared library
+        print_info "Creating shared library..."
+        nvcc -shared -Xcompiler -fPIC \
+             $OBJECT_FILES \
+             -o libpineapple.so.${VERSION} \
+             -lcudart
+        
+        # Create version symlinks
+        ln -sf libpineapple.so.${VERSION} libpineapple.so.${VERSION%.*}
+        ln -sf libpineapple.so.${VERSION} libpineapple.so
+        
+        print_success "CUDA libraries compiled successfully"
+        print_info "Compiled files: $(echo $CUDA_FILES $CPP_FILES | wc -w) source files -> $(echo $OBJECT_FILES | wc -w) object files"
+    else
+        # CPU-only compilation
+        if [[ -z "$CPP_FILES" ]]; then
+            print_warning "No C++ (.cpp) source files found in src/ for CPU-only build"
+            print_info "CPU-only build will be header-only"
+            cd - > /dev/null
+            return 0
+        fi
+        
+        # GCC compilation flags for CPU-only
+        COMPILER_FLAGS="-std=c++20 -fPIC -fopenmp -O3 -Iinc"
+        
+        # Compile C++ files with g++
+        OBJECT_FILES=""
+        print_info "Compiling C++ source files for CPU-only build..."
+        for cpp_file in $CPP_FILES; do
+            obj_name=$(basename "${cpp_file%.cpp}.o")
+            print_info "  Compiling $cpp_file -> $obj_name"
+            g++ $COMPILER_FLAGS -c "$cpp_file" -o "$obj_name"
+            OBJECT_FILES="$OBJECT_FILES $obj_name"
+        done
+        
+        if [[ -z "$OBJECT_FILES" ]]; then
+            print_warning "No object files were generated for CPU-only build"
+            cd - > /dev/null
+            return 0
+        fi
+        
+        # Create static library
+        print_info "Creating static library..."
+        ar rcs libpineapple.a $OBJECT_FILES
+        
+        # Create shared library
+        print_info "Creating shared library..."
+        g++ -shared -fPIC $OBJECT_FILES -o libpineapple.so.${VERSION} -fopenmp
+        
+        # Create version symlinks
+        ln -sf libpineapple.so.${VERSION} libpineapple.so.${VERSION%.*}
+        ln -sf libpineapple.so.${VERSION} libpineapple.so
+        
+        print_success "CPU libraries compiled successfully"
+        print_info "Compiled files: $(echo $CPP_FILES | wc -w) source files -> $(echo $OBJECT_FILES | wc -w) object files"
+    fi
     
     # Move back to original directory
     cd - > /dev/null
-    
-    print_success "CUDA libraries compiled successfully"
 }
 
 install_library() {
@@ -182,20 +252,35 @@ install_library() {
     $SUDO cp -r src "$INCLUDEDIR/$LIBRARY_NAME/"
     $SUDO cp pineapple.hpp "$INCLUDEDIR/$LIBRARY_NAME/"
     
-    # Install CUDA libraries if compiled
-    if [[ "$CUDA_ENABLED" == "1" ]] && [[ -f "/tmp/pineapple_build/libpineapple_cuda.a" ]]; then
-        print_info "Installing CUDA libraries..."
-        $SUDO cp /tmp/pineapple_build/libpineapple_cuda.a "$LIBDIR/"
-        $SUDO cp /tmp/pineapple_build/libpineapple_cuda.so.${VERSION} "$LIBDIR/"
-        $SUDO cp /tmp/pineapple_build/libpineapple_cuda.so.${VERSION%.*} "$LIBDIR/"
-        $SUDO cp /tmp/pineapple_build/libpineapple_cuda.so "$LIBDIR/"
+    # Install compiled libraries if they exist
+    if [[ -f "/tmp/pineapple_build/libpineapple.a" ]]; then
+        if [[ "$CUDA_ENABLED" == "1" ]]; then
+            print_info "Installing CUDA libraries..."
+        else
+            print_info "Installing CPU libraries..."
+        fi
+        
+        $SUDO cp /tmp/pineapple_build/libpineapple.a "$LIBDIR/"
+        $SUDO cp /tmp/pineapple_build/libpineapple.so.${VERSION} "$LIBDIR/"
+        $SUDO cp /tmp/pineapple_build/libpineapple.so.${VERSION%.*} "$LIBDIR/"
+        $SUDO cp /tmp/pineapple_build/libpineapple.so "$LIBDIR/"
         
         # Update library cache
         if command -v ldconfig >/dev/null 2>&1; then
             $SUDO ldconfig
         fi
         
-        print_success "CUDA libraries installed"
+        if [[ "$CUDA_ENABLED" == "1" ]]; then
+            print_success "CUDA libraries installed"
+        else
+            print_success "CPU libraries installed"
+        fi
+    else
+        if [[ "$CUDA_ENABLED" == "1" ]]; then
+            print_warning "No CUDA libraries were compiled, installation will be header-only"
+        else
+            print_info "No compiled libraries needed, installation is header-only"
+        fi
     fi
     
     if [ ! -f "$INCLUDEDIR/$LIBRARY_NAME/pineapple.hpp" ]; then
@@ -225,13 +310,29 @@ libdir=\${prefix}/lib
 Name: $LIBRARY_NAME
 Description: Pineapple Neural Network Library - Header-only C++ template library with CUDA support
 Version: $VERSION
-Cflags: -I\${includedir}/$LIBRARY_NAME -fopenmp -std=c++20 
-Libs: -L\${libdir} -lpineapple_cuda -lcudart -fopenmp
+Cflags: -I\${includedir} -std=c++20
+Libs: -L\${libdir} -lpineapple -lcudart
 Libs.private: -lcuda
 EOF
     else
         # pkg-config without CUDA support
-        cat > /tmp/pineapple.pc << EOF
+        if [[ -f "/tmp/pineapple_build/libpineapple.a" ]]; then
+            # CPU version with compiled library
+            cat > /tmp/pineapple.pc << EOF
+prefix=$PREFIX
+exec_prefix=\${prefix}
+includedir=\${prefix}/include
+libdir=\${prefix}/lib
+
+Name: $LIBRARY_NAME
+Description: Pineapple Neural Network Library - Header-only C++ template library
+Version: $VERSION
+Cflags: -I\${includedir} -fopenmp -std=c++20
+Libs: -L\${libdir} -lpineapple -fopenmp
+EOF
+        else
+            # CPU version header-only
+            cat > /tmp/pineapple.pc << EOF
 prefix=$PREFIX
 exec_prefix=\${prefix}
 includedir=\${prefix}/include
@@ -239,9 +340,10 @@ includedir=\${prefix}/include
 Name: $LIBRARY_NAME
 Description: Pineapple Neural Network Library - Header-only C++ template library
 Version: $VERSION
-Cflags: -I\${includedir}/$LIBRARY_NAME -fopenmp -std=c++20
+Cflags: -I\${includedir} -fopenmp -std=c++20
 Libs: -fopenmp
 EOF
+        fi
     fi
     
     $SUDO cp /tmp/pineapple.pc "$PKGCONFIGDIR/"
@@ -253,8 +355,9 @@ EOF
     $SUDO find "$INCLUDEDIR/$LIBRARY_NAME" -type d -exec chmod 755 {} \;
     $SUDO chmod 644 "$PKGCONFIGDIR/pineapple.pc"
     
-    if [[ "$CUDA_ENABLED" == "1" ]]; then
-        $SUDO chmod 644 "$LIBDIR"/libpineapple_cuda.*
+    # Set permissions for compiled libraries if they exist
+    if [[ -f "$LIBDIR/libpineapple.a" ]]; then
+        $SUDO chmod 644 "$LIBDIR"/libpineapple.*
     fi
     
     # Clean up build directory
@@ -304,15 +407,20 @@ EOF
     # Try to compile
     if pkg-config --exists pineapple 2>/dev/null; then
         if [[ "$CUDA_ENABLED" == "1" ]]; then
-            # Test with nvcc for CUDA
-            if nvcc --extended-lambda -std=c++20 $(pkg-config --cflags pineapple) /tmp/test_pineapple.cpp $(pkg-config --libs pineapple) -o /tmp/test_pineapple 2>/dev/null; then
+            # Test with nvcc for CUDA (need to handle OpenMP flag specially)
+            NVCC_CFLAGS=$(pkg-config --cflags pineapple)
+            NVCC_LIBS=$(pkg-config --libs pineapple)
+            
+            if nvcc --extended-lambda $NVCC_CFLAGS -Xcompiler -fopenmp /tmp/test_pineapple.cpp $NVCC_LIBS -o /tmp/test_pineapple 2>/dev/null; then
                 if /tmp/test_pineapple >/dev/null 2>&1; then
                     print_success "Installation test passed (with CUDA)!"
                 else
                     print_warning "Compilation OK, but execution failed"
                 fi
             else
-                print_warning "Test compilation with nvcc failed"
+                print_warning "Test compilation with nvcc failed - trying detailed error output..."
+                # Try again with error output for debugging
+                nvcc --extended-lambda $NVCC_CFLAGS -Xcompiler -fopenmp /tmp/test_pineapple.cpp $NVCC_LIBS -o /tmp/test_pineapple_debug 2>&1 | head -10
             fi
         else
             # Test with g++ for CPU-only
@@ -349,16 +457,21 @@ show_usage_info() {
         echo "   nvcc --extended-lambda -std=c++20 \$(pkg-config --cflags pineapple) your_file.cpp \$(pkg-config --libs pineapple) -o your_program"
         echo ""
         echo "3. Or compile manually with CUDA:"
-        echo "   nvcc --extended-lambda -std=c++20 -I$INCLUDEDIR/$LIBRARY_NAME -Xcompiler -fopenmp your_file.cpp -L$LIBDIR -lpineapple_cuda -lcudart -fopenmp -o your_program"
+        echo "   nvcc --extended-lambda -std=c++20 -I$INCLUDEDIR -Xcompiler -fopenmp your_file.cpp -L$LIBDIR -lpineapple -lcudart -o your_program"
         echo ""
         echo "4. For CPU-only compilation (without CUDA features):"
-        echo "   g++ -std=c++20 -I$INCLUDEDIR/$LIBRARY_NAME -fopenmp your_file.cpp -fopenmp -o your_program"
+        echo "   g++ -std=c++20 -I$INCLUDEDIR -fopenmp your_file.cpp -fopenmp -o your_program"
     else
         echo "2. Compile using pkg-config (recommended):"
         echo "   g++ -std=c++20 \$(pkg-config --cflags pineapple) your_file.cpp \$(pkg-config --libs pineapple) -o your_program"
         echo ""
-        echo "3. Or compile manually:"
-        echo "   g++ -std=c++20 -I$INCLUDEDIR/$LIBRARY_NAME -fopenmp your_file.cpp -fopenmp -o your_program"
+        if [[ -f "$LIBDIR/libpineapple.a" ]]; then
+            echo "3. Or compile manually:"
+            echo "   g++ -std=c++20 -I$INCLUDEDIR -fopenmp your_file.cpp -L$LIBDIR -lpineapple -fopenmp -o your_program"
+        else
+            echo "3. Or compile manually (header-only):"
+            echo "   g++ -std=c++20 -I$INCLUDEDIR -fopenmp your_file.cpp -fopenmp -o your_program"
+        fi
         echo ""
         echo "4. For CUDA support, reinstall with:"
         echo "   CUDA=1 ./install.sh"
@@ -422,21 +535,56 @@ main() {
         exit 1
     fi
     
-    # Check for CUDA source files if CUDA is enabled
+    # Check for source files
     if [[ "$CUDA_ENABLED" == "1" ]]; then
-        if [ ! -f "src/tensor/tensor_cuda_kernels.cu" ] || [ ! -f "src/tensor/tensor_cuda_wrappers.cu" ]; then
-            print_error "CUDA source files not found!"
-            print_error "Required files: src/tensor/tensor_cuda_kernels.cu, src/tensor/tensor_cuda_wrappers.cu"
+        CUDA_FILES=$(find src -name "*.cu" 2>/dev/null)
+        CPP_FILES=$(find src -name "*.cpp" 2>/dev/null)
+        
+        if [[ -z "$CUDA_FILES" && -z "$CPP_FILES" ]]; then
+            print_error "No CUDA (.cu) or C++ (.cpp) source files found!"
+            print_error "CUDA support requires at least one .cu or .cpp file in src/ directory"
+            print_info "Found directories: $(find src -type d | tr '\n' ' ')"
             exit 1
+        fi
+        
+        # Check for essential CUDA headers
+        if [ ! -f "inc/device/tensor_cuda_wrappers.hpp" ]; then
+            print_warning "CUDA wrapper header not found: inc/device/tensor_cuda_wrappers.hpp"
+        fi
+        
+        print_info "Found CUDA/C++ source files:"
+        if [[ -n "$CUDA_FILES" ]]; then
+            print_info "  CUDA files (.cu): $(echo $CUDA_FILES | wc -w)"
+            for file in $CUDA_FILES; do
+                print_info "    $file"
+            done
+        fi
+        if [[ -n "$CPP_FILES" ]]; then
+            print_info "  C++ files (.cpp): $(echo $CPP_FILES | wc -w)"
+            for file in $CPP_FILES; do
+                print_info "    $file"
+            done
+        fi
+    else
+        # For CPU-only build, check for C++ files
+        CPP_FILES=$(find src -name "*.cpp" 2>/dev/null)
+        
+        if [[ -n "$CPP_FILES" ]]; then
+            print_info "Found C++ source files for compilation:"
+            print_info "  C++ files (.cpp): $(echo $CPP_FILES | wc -w)"
+            for file in $CPP_FILES; do
+                print_info "    $file"
+            done
+        else
+            print_info "No C++ source files found - installation will be header-only"
         fi
     fi
     
     check_permissions
     check_dependencies
     
-    if [[ "$CUDA_ENABLED" == "1" ]]; then
-        compile_cuda_libraries
-    fi
+    # Compile libraries for both CUDA and CPU versions
+    compile_libraries
     
     install_library
     test_installation

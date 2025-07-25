@@ -6,6 +6,8 @@
 #include <functional>
 #include <type_traits>
 
+extern __shared__ unsigned char shared_data[];
+
 template <typename T, typename U, typename R, typename F>
 __global__ void tensor_elementwise_kernel(const T* a, const U* b, R* result, size_t size, F operation) {
     const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -88,7 +90,7 @@ __global__ void tensor_type_convert_kernel(const U* src, T* dst, size_t size) {
 // Kernels para operações de redução
 template<typename T>
 __global__ void tensor_min_kernel(const T* data, T* result, size_t size) {
-    extern __shared__ T sdata[];
+    T* sdata = reinterpret_cast<T*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -108,7 +110,7 @@ __global__ void tensor_min_kernel(const T* data, T* result, size_t size) {
 
 template<typename T>
 __global__ void tensor_max_kernel(const T* data, T* result, size_t size) {
-    extern __shared__ T sdata[];
+    T* sdata = reinterpret_cast<T*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -128,7 +130,7 @@ __global__ void tensor_max_kernel(const T* data, T* result, size_t size) {
 
 template<typename T>
 __global__ void tensor_sum_kernel(const T* data, T* result, size_t size) {
-    extern __shared__ T sdata[];
+    T* sdata = reinterpret_cast<T*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -216,7 +218,7 @@ __global__ void tensor_flip_kernel(const T* a, T* result, const int* shape, cons
 // Kernel para norm (euclidean)
 template<typename T>
 __global__ void tensor_norm_squared_kernel(const T* data, T* result, size_t size) {
-    extern __shared__ T sdata[];
+    T* sdata = reinterpret_cast<T*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -245,68 +247,68 @@ __global__ void tensor_logical_not_kernel(const T* a, bool* result, size_t size)
 // Reduction kernels for any/all operations
 template<typename T>
 __global__ void tensor_any_kernel(const T* data, bool* result, size_t size) {
-    extern __shared__ bool any_sdata[];
+    bool* sdata = reinterpret_cast<bool*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     
-    any_sdata[tid] = (i < size) ? static_cast<bool>(data[i]) : false;
+    sdata[tid] = (i < size) ? static_cast<bool>(data[i]) : false;
     __syncthreads();
     
     for(unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
         if(tid < s && (i + s) < size) {
-            any_sdata[tid] = any_sdata[tid] || any_sdata[tid + s];
+            sdata[tid] = sdata[tid] || sdata[tid + s];
         }
         __syncthreads();
     }
     
-    if(tid == 0) result[blockIdx.x] = any_sdata[0];
+    if(tid == 0) result[blockIdx.x] = sdata[0];
 }
 
 template<typename T>
 __global__ void tensor_all_kernel(const T* data, bool* result, size_t size) {
-    extern __shared__ bool all_sdata[];
+    bool* sdata = reinterpret_cast<bool*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     
-    all_sdata[tid] = (i < size) ? static_cast<bool>(data[i]) : true;
+    sdata[tid] = (i < size) ? static_cast<bool>(data[i]) : true;
     __syncthreads();
     
     for(unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
         if(tid < s && (i + s) < size) {
-            all_sdata[tid] = all_sdata[tid] && all_sdata[tid + s];
+            sdata[tid] = sdata[tid] && sdata[tid + s];
         }
         __syncthreads();
     }
     
-    if(tid == 0) result[blockIdx.x] = all_sdata[0];
+    if(tid == 0) result[blockIdx.x] = sdata[0];
 }
 
 // Variance kernel (two-pass algorithm)
 template<typename T>
 __global__ void tensor_variance_kernel(const T* data, T mean_val, T* result, size_t size) {
-    extern __shared__ T var_sdata[];
+    T* sdata = reinterpret_cast<T*>(shared_data);
     
     unsigned int tid = threadIdx.x;
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (i < size) {
         T diff = data[i] - mean_val;
-        var_sdata[tid] = diff * diff;
+        sdata[tid] = diff * diff;
     } else {
-        var_sdata[tid] = T(0);
+        sdata[tid] = T(0);
     }
     __syncthreads();
     
     for(unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
         if(tid < s && (i + s) < size) {
-            var_sdata[tid] += var_sdata[tid + s];
+            sdata[tid] += sdata[tid + s];
         }
         __syncthreads();
     }
     
-    if(tid == 0) result[blockIdx.x] = var_sdata[0];
+    if(tid == 0) result[blockIdx.x] = sdata[0];
 }
 
 // Argmax kernel

@@ -850,24 +850,52 @@ template void cuda_memcpy_host_to_device<bool>(bool*, const bool*, size_t);
 template void cuda_memcpy_device_to_host<bool>(bool*, const bool*, size_t);
 template void cuda_memcpy_device_to_device<bool>(bool*, const bool*, size_t);
 
-// Arithmetic operations
+// Element-wise operations - all type combinations
 template void launch_tensor_add<float, float, float>(const float*, const float*, float*, size_t);
-template void launch_tensor_subtract<float, float, float>(const float*, const float*, float*, size_t);
-template void launch_tensor_multiply<float, float, float>(const float*, const float*, float*, size_t);
-template void launch_tensor_divide<float, float, float>(const float*, const float*, float*, size_t);
-template void launch_tensor_copy<float>(const float*, float*, size_t);
-template void launch_tensor_fill<float>(float*, float, size_t);
-
-// Cross-type operations
+template void launch_tensor_add<float, int, float>(const float*, const int*, float*, size_t);
+template void launch_tensor_add<float, double, double>(const float*, const double*, double*, size_t);
 template void launch_tensor_add<int, float, float>(const int*, const float*, float*, size_t);
+template void launch_tensor_add<int, int, int>(const int*, const int*, int*, size_t);
+template void launch_tensor_add<int, double, double>(const int*, const double*, double*, size_t);
+template void launch_tensor_add<double, float, double>(const double*, const float*, double*, size_t);
+template void launch_tensor_add<double, int, double>(const double*, const int*, double*, size_t);
+template void launch_tensor_add<double, double, double>(const double*, const double*, double*, size_t);
 
-// Operations for int
+template void launch_tensor_subtract<float, float, float>(const float*, const float*, float*, size_t);
+template void launch_tensor_subtract<float, int, float>(const float*, const int*, float*, size_t);
+template void launch_tensor_subtract<float, double, double>(const float*, const double*, double*, size_t);
+template void launch_tensor_subtract<int, float, float>(const int*, const float*, float*, size_t);
+template void launch_tensor_subtract<int, int, int>(const int*, const int*, int*, size_t);
+template void launch_tensor_subtract<int, double, double>(const int*, const double*, double*, size_t);
+template void launch_tensor_subtract<double, float, double>(const double*, const float*, double*, size_t);
+template void launch_tensor_subtract<double, int, double>(const double*, const int*, double*, size_t);
+template void launch_tensor_subtract<double, double, double>(const double*, const double*, double*, size_t);
+
+template void launch_tensor_multiply<float, float, float>(const float*, const float*, float*, size_t);
+template void launch_tensor_multiply<float, int, float>(const float*, const int*, float*, size_t);
+template void launch_tensor_multiply<float, double, double>(const float*, const double*, double*, size_t);
+template void launch_tensor_multiply<int, float, float>(const int*, const float*, float*, size_t);
+template void launch_tensor_multiply<int, int, int>(const int*, const int*, int*, size_t);
+template void launch_tensor_multiply<int, double, double>(const int*, const double*, double*, size_t);
+template void launch_tensor_multiply<double, float, double>(const double*, const float*, double*, size_t);
+template void launch_tensor_multiply<double, int, double>(const double*, const int*, double*, size_t);
+template void launch_tensor_multiply<double, double, double>(const double*, const double*, double*, size_t);
+
+template void launch_tensor_divide<float, float, float>(const float*, const float*, float*, size_t);
+template void launch_tensor_divide<float, int, float>(const float*, const int*, float*, size_t);
+template void launch_tensor_divide<float, double, double>(const float*, const double*, double*, size_t);
+template void launch_tensor_divide<int, float, float>(const int*, const float*, float*, size_t);
+template void launch_tensor_divide<int, int, int>(const int*, const int*, int*, size_t);
+template void launch_tensor_divide<int, double, double>(const int*, const double*, double*, size_t);
+template void launch_tensor_divide<double, float, double>(const double*, const float*, double*, size_t);
+template void launch_tensor_divide<double, int, double>(const double*, const int*, double*, size_t);
+template void launch_tensor_divide<double, double, double>(const double*, const double*, double*, size_t);
+
+// Copy operations
+template void launch_tensor_copy<float>(const float*, float*, size_t);
 template void launch_tensor_copy<int>(const int*, int*, size_t);
-template void launch_tensor_fill<int>(int*, int, size_t);
-
-// Operations for double  
 template void launch_tensor_copy<double>(const double*, double*, size_t);
-template void launch_tensor_fill<double>(double*, double, size_t);
+template void launch_tensor_copy<bool>(const bool*, bool*, size_t);
 
 // Type conversion operations
 template void launch_tensor_type_convert<float, int>(const int*, float*, size_t);
@@ -876,68 +904,135 @@ template void launch_tensor_type_convert<int, float>(const float*, int*, size_t)
 template void launch_tensor_type_convert<int, double>(const double*, int*, size_t);
 template void launch_tensor_type_convert<double, float>(const float*, double*, size_t);
 template void launch_tensor_type_convert<double, int>(const int*, double*, size_t);
-template void launch_tensor_type_convert<bool, float>(const float*, bool*, size_t);
-template void launch_tensor_type_convert<bool, int>(const int*, bool*, size_t);
-template void launch_tensor_type_convert<bool, double>(const double*, bool*, size_t);
 
-// Scalar operations
+// Fill operations
+template void launch_tensor_fill<float>(float*, float, size_t);
+template void launch_tensor_fill<int>(int*, int, size_t);
+template void launch_tensor_fill<double>(double*, double, size_t);
+template void launch_tensor_fill<bool>(bool*, bool, size_t);
+
+// Scalar operations - all type combinations
 template void launch_tensor_scalar_add<float, float, float>(const float*, float, float*, size_t);
+template void launch_tensor_scalar_add<float, int, float>(const float*, int, float*, size_t);
+template void launch_tensor_scalar_add<float, double, double>(const float*, double, double*, size_t);
+template void launch_tensor_scalar_add<int, float, float>(const int*, float, float*, size_t);
+template void launch_tensor_scalar_add<int, int, int>(const int*, int, int*, size_t);
+template void launch_tensor_scalar_add<int, double, double>(const int*, double, double*, size_t);
+template void launch_tensor_scalar_add<double, float, double>(const double*, float, double*, size_t);
+template void launch_tensor_scalar_add<double, int, double>(const double*, int, double*, size_t);
+template void launch_tensor_scalar_add<double, double, double>(const double*, double, double*, size_t);
+
 template void launch_tensor_scalar_subtract<float, float, float>(const float*, float, float*, size_t);
+template void launch_tensor_scalar_subtract<float, int, float>(const float*, int, float*, size_t);
+template void launch_tensor_scalar_subtract<float, double, double>(const float*, double, double*, size_t);
+template void launch_tensor_scalar_subtract<int, float, float>(const int*, float, float*, size_t);
+template void launch_tensor_scalar_subtract<int, int, int>(const int*, int, int*, size_t);
+template void launch_tensor_scalar_subtract<int, double, double>(const int*, double, double*, size_t);
+template void launch_tensor_scalar_subtract<double, float, double>(const double*, float, double*, size_t);
+template void launch_tensor_scalar_subtract<double, int, double>(const double*, int, double*, size_t);
+template void launch_tensor_scalar_subtract<double, double, double>(const double*, double, double*, size_t);
+
 template void launch_tensor_scalar_multiply<float, float, float>(const float*, float, float*, size_t);
+template void launch_tensor_scalar_multiply<float, int, float>(const float*, int, float*, size_t);
+template void launch_tensor_scalar_multiply<float, double, double>(const float*, double, double*, size_t);
+template void launch_tensor_scalar_multiply<int, float, float>(const int*, float, float*, size_t);
+template void launch_tensor_scalar_multiply<int, int, int>(const int*, int, int*, size_t);
+template void launch_tensor_scalar_multiply<int, double, double>(const int*, double, double*, size_t);
+template void launch_tensor_scalar_multiply<double, float, double>(const double*, float, double*, size_t);
+template void launch_tensor_scalar_multiply<double, int, double>(const double*, int, double*, size_t);
+template void launch_tensor_scalar_multiply<double, double, double>(const double*, double, double*, size_t);
+
 template void launch_tensor_scalar_divide<float, float, float>(const float*, float, float*, size_t);
+template void launch_tensor_scalar_divide<float, int, float>(const float*, int, float*, size_t);
+template void launch_tensor_scalar_divide<float, double, double>(const float*, double, double*, size_t);
+template void launch_tensor_scalar_divide<int, float, float>(const int*, float, float*, size_t);
+template void launch_tensor_scalar_divide<int, int, int>(const int*, int, int*, size_t);
+template void launch_tensor_scalar_divide<int, double, double>(const int*, double, double*, size_t);
+template void launch_tensor_scalar_divide<double, float, double>(const double*, float, double*, size_t);
+template void launch_tensor_scalar_divide<double, int, double>(const double*, int, double*, size_t);
+template void launch_tensor_scalar_divide<double, double, double>(const double*, double, double*, size_t);
 
 // In-place operations
 template void launch_tensor_inplace_add<float, float>(float*, const float*, size_t);
+template void launch_tensor_inplace_add<float, int>(float*, const int*, size_t);
+template void launch_tensor_inplace_add<float, double>(float*, const double*, size_t);
+template void launch_tensor_inplace_add<int, float>(int*, const float*, size_t);
+template void launch_tensor_inplace_add<int, int>(int*, const int*, size_t);
+template void launch_tensor_inplace_add<int, double>(int*, const double*, size_t);
+template void launch_tensor_inplace_add<double, float>(double*, const float*, size_t);
+template void launch_tensor_inplace_add<double, int>(double*, const int*, size_t);
+template void launch_tensor_inplace_add<double, double>(double*, const double*, size_t);
+
 template void launch_tensor_inplace_subtract<float, float>(float*, const float*, size_t);
+template void launch_tensor_inplace_subtract<float, int>(float*, const int*, size_t);
+template void launch_tensor_inplace_subtract<float, double>(float*, const double*, size_t);
+template void launch_tensor_inplace_subtract<int, float>(int*, const float*, size_t);
+template void launch_tensor_inplace_subtract<int, int>(int*, const int*, size_t);
+template void launch_tensor_inplace_subtract<int, double>(int*, const double*, size_t);
+template void launch_tensor_inplace_subtract<double, float>(double*, const float*, size_t);
+template void launch_tensor_inplace_subtract<double, int>(double*, const int*, size_t);
+template void launch_tensor_inplace_subtract<double, double>(double*, const double*, size_t);
+
 template void launch_tensor_inplace_multiply<float, float>(float*, const float*, size_t);
+template void launch_tensor_inplace_multiply<float, int>(float*, const int*, size_t);
+template void launch_tensor_inplace_multiply<float, double>(float*, const double*, size_t);
+template void launch_tensor_inplace_multiply<int, float>(int*, const float*, size_t);
+template void launch_tensor_inplace_multiply<int, int>(int*, const int*, size_t);
+template void launch_tensor_inplace_multiply<int, double>(int*, const double*, size_t);
+template void launch_tensor_inplace_multiply<double, float>(double*, const float*, size_t);
+template void launch_tensor_inplace_multiply<double, int>(double*, const int*, size_t);
+template void launch_tensor_inplace_multiply<double, double>(double*, const double*, size_t);
+
 template void launch_tensor_inplace_divide<float, float>(float*, const float*, size_t);
+template void launch_tensor_inplace_divide<float, int>(float*, const int*, size_t);
+template void launch_tensor_inplace_divide<float, double>(float*, const double*, size_t);
+template void launch_tensor_inplace_divide<int, float>(int*, const float*, size_t);
+template void launch_tensor_inplace_divide<int, int>(int*, const int*, size_t);
+template void launch_tensor_inplace_divide<int, double>(int*, const double*, size_t);
+template void launch_tensor_inplace_divide<double, float>(double*, const float*, size_t);
+template void launch_tensor_inplace_divide<double, int>(double*, const int*, size_t);
+template void launch_tensor_inplace_divide<double, double>(double*, const double*, size_t);
 
+// In-place scalar operations
 template void launch_tensor_inplace_scalar_add<float, float>(float*, float, size_t);
+template void launch_tensor_inplace_scalar_add<float, int>(float*, int, size_t);
+template void launch_tensor_inplace_scalar_add<float, double>(float*, double, size_t);
+template void launch_tensor_inplace_scalar_add<int, float>(int*, float, size_t);
+template void launch_tensor_inplace_scalar_add<int, int>(int*, int, size_t);
+template void launch_tensor_inplace_scalar_add<int, double>(int*, double, size_t);
+template void launch_tensor_inplace_scalar_add<double, float>(double*, float, size_t);
+template void launch_tensor_inplace_scalar_add<double, int>(double*, int, size_t);
+template void launch_tensor_inplace_scalar_add<double, double>(double*, double, size_t);
+
 template void launch_tensor_inplace_scalar_subtract<float, float>(float*, float, size_t);
+template void launch_tensor_inplace_scalar_subtract<float, int>(float*, int, size_t);
+template void launch_tensor_inplace_scalar_subtract<float, double>(float*, double, size_t);
+template void launch_tensor_inplace_scalar_subtract<int, float>(int*, float, size_t);
+template void launch_tensor_inplace_scalar_subtract<int, int>(int*, int, size_t);
+template void launch_tensor_inplace_scalar_subtract<int, double>(int*, double, size_t);
+template void launch_tensor_inplace_scalar_subtract<double, float>(double*, float, size_t);
+template void launch_tensor_inplace_scalar_subtract<double, int>(double*, int, size_t);
+template void launch_tensor_inplace_scalar_subtract<double, double>(double*, double, size_t);
+
 template void launch_tensor_inplace_scalar_multiply<float, float>(float*, float, size_t);
+template void launch_tensor_inplace_scalar_multiply<float, int>(float*, int, size_t);
+template void launch_tensor_inplace_scalar_multiply<float, double>(float*, double, size_t);
+template void launch_tensor_inplace_scalar_multiply<int, float>(int*, float, size_t);
+template void launch_tensor_inplace_scalar_multiply<int, int>(int*, int, size_t);
+template void launch_tensor_inplace_scalar_multiply<int, double>(int*, double, size_t);
+template void launch_tensor_inplace_scalar_multiply<double, float>(double*, float, size_t);
+template void launch_tensor_inplace_scalar_multiply<double, int>(double*, int, size_t);
+template void launch_tensor_inplace_scalar_multiply<double, double>(double*, double, size_t);
+
 template void launch_tensor_inplace_scalar_divide<float, float>(float*, float, size_t);
-
-// Reduction operations
-template float launch_tensor_min<float>(const float*, size_t);
-template float launch_tensor_max<float>(const float*, size_t);
-template float launch_tensor_sum<float>(const float*, size_t);
-template float launch_tensor_norm<float>(const float*, size_t);
-
-// Boolean operations
-template void launch_tensor_equal<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_not_equal<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_less_than<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_less_equal<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_greater_than<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_greater_equal<float, float>(const float*, const float*, bool*, size_t);
-
-template void launch_tensor_scalar_equal<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_not_equal<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_less_than<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_less_equal<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_greater_than<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_greater_equal<float, float>(const float*, float, bool*, size_t);
-
-template void launch_tensor_logical_and<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_logical_or<float, float>(const float*, const float*, bool*, size_t);
-template void launch_tensor_scalar_logical_and<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_scalar_logical_or<float, float>(const float*, float, bool*, size_t);
-template void launch_tensor_logical_not<float>(const float*, bool*, size_t);
-template bool launch_tensor_any<float>(const float*, size_t);
-template bool launch_tensor_all<float>(const float*, size_t);
-
-template void launch_tensor_logical_and<bool, bool>(const bool*, const bool*, bool*, size_t);
-template void launch_tensor_logical_or<bool, bool>(const bool*, const bool*, bool*, size_t);
-template void launch_tensor_scalar_logical_and<bool, bool>(const bool*, bool, bool*, size_t);
-template void launch_tensor_scalar_logical_or<bool, bool>(const bool*, bool, bool*, size_t);
-template void launch_tensor_logical_not<bool>(const bool*, bool*, size_t);
-template bool launch_tensor_any<bool>(const bool*, size_t);
-template bool launch_tensor_all<bool>(const bool*, size_t);
-
-// New operations
-template float launch_tensor_variance<float>(const float*, float, size_t);
-template void launch_tensor_slice<float>(const float*, float*, int, int, size_t);
-template void launch_tensor_sqrt<float>(const float*, float*, size_t);
+template void launch_tensor_inplace_scalar_divide<float, int>(float*, int, size_t);
+template void launch_tensor_inplace_scalar_divide<float, double>(float*, double, size_t);
+template void launch_tensor_inplace_scalar_divide<int, float>(int*, float, size_t);
+template void launch_tensor_inplace_scalar_divide<int, int>(int*, int, size_t);
+template void launch_tensor_inplace_scalar_divide<int, double>(int*, double, size_t);
+template void launch_tensor_inplace_scalar_divide<double, float>(double*, float, size_t);
+template void launch_tensor_inplace_scalar_divide<double, int>(double*, int, size_t);
+template void launch_tensor_inplace_scalar_divide<double, double>(double*, double, size_t);
 
 // Element-wise operations
 template void launch_tensor_abs<float>(const float*, float*, size_t);
@@ -961,30 +1056,234 @@ template void launch_tensor_flip<float>(const float*, float*, const int*, const 
 template void launch_tensor_flip<int>(const int*, int*, const int*, const int*, const int*, const int*, int, int, size_t);
 template void launch_tensor_flip<double>(const double*, double*, const int*, const int*, const int*, const int*, int, int, size_t);
 
-// Explicit instantiations for new functions
-template void launch_tensor_dilate<float>(const float*, float*, const int*, const int*, 
-                                         const int*, const int*, const int*, int, int, int, size_t);
-template void launch_tensor_dilate<int>(const int*, int*, const int*, const int*, 
-                                       const int*, const int*, const int*, int, int, int, size_t);
-template void launch_tensor_dilate<double>(const double*, double*, const int*, const int*, 
-                                          const int*, const int*, const int*, int, int, int, size_t);
+// Reduction operations
+template float launch_tensor_min<float>(const float*, size_t);
+template int launch_tensor_min<int>(const int*, size_t);
+template double launch_tensor_min<double>(const double*, size_t);
 
-template void launch_tensor_pad<float>(const float*, float*, const int*, const int*, 
-                                      const int*, const int*, const int*, int, int, int, size_t);
-template void launch_tensor_pad<int>(const int*, int*, const int*, const int*, 
-                                    const int*, const int*, const int*, int, int, int, size_t);
-template void launch_tensor_pad<double>(const double*, double*, const int*, const int*, 
-                                       const int*, const int*, const int*, int, int, int, size_t);
+template float launch_tensor_max<float>(const float*, size_t);
+template int launch_tensor_max<int>(const int*, size_t);
+template double launch_tensor_max<double>(const double*, size_t);
 
-template void launch_tensor_dot<float, float, float>(const float*, const float*, float*,
-                                                             int, int, int, int, int, int, bool, bool);
-template void launch_tensor_dot<int, int, int>(const int*, const int*, int*,
-                                                       int, int, int, int, int, int, bool, bool);
-template void launch_tensor_dot<double, double, double>(const double*, const double*, double*,
-                                                                int, int, int, int, int, int, bool, bool);
-template void launch_tensor_dot<float, int, float>(const float*, const int*, float*,
-                                                           int, int, int, int, int, int, bool, bool);
-template void launch_tensor_dot<int, float, float>(const int*, const float*, float*,
-                                                           int, int, int, int, int, int, bool, bool);
+template float launch_tensor_sum<float>(const float*, size_t);
+template int launch_tensor_sum<int>(const int*, size_t);
+template double launch_tensor_sum<double>(const double*, size_t);
+
+template float launch_tensor_norm<float>(const float*, size_t);
+template double launch_tensor_norm<double>(const double*, size_t);
+
+template float launch_tensor_variance<float>(const float*, float, size_t);
+template double launch_tensor_variance<double>(const double*, double, size_t);
+
+// Slice operation
+template void launch_tensor_slice<float>(const float*, float*, int, int, size_t);
+template void launch_tensor_slice<int>(const int*, int*, int, int, size_t);
+template void launch_tensor_slice<double>(const double*, double*, int, int, size_t);
+
+// Square root operation
+template void launch_tensor_sqrt<float>(const float*, float*, size_t);
+template void launch_tensor_sqrt<double>(const double*, double*, size_t);
+
+// Boolean operations - all type combinations
+template void launch_tensor_equal<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_equal<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_equal<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_equal<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_equal<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_equal<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_equal<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_equal<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_equal<double, double>(const double*, const double*, bool*, size_t);
+
+template void launch_tensor_not_equal<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_not_equal<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_not_equal<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_not_equal<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_not_equal<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_not_equal<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_not_equal<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_not_equal<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_not_equal<double, double>(const double*, const double*, bool*, size_t);
+
+template void launch_tensor_less_than<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_less_than<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_less_than<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_less_than<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_less_than<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_less_than<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_less_than<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_less_than<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_less_than<double, double>(const double*, const double*, bool*, size_t);
+
+template void launch_tensor_less_equal<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_less_equal<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_less_equal<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_less_equal<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_less_equal<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_less_equal<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_less_equal<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_less_equal<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_less_equal<double, double>(const double*, const double*, bool*, size_t);
+
+template void launch_tensor_greater_than<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_greater_than<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_greater_than<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_greater_than<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_greater_than<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_greater_than<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_greater_than<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_greater_than<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_greater_than<double, double>(const double*, const double*, bool*, size_t);
+
+template void launch_tensor_greater_equal<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_greater_equal<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_greater_equal<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_greater_equal<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_greater_equal<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_greater_equal<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_greater_equal<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_greater_equal<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_greater_equal<double, double>(const double*, const double*, bool*, size_t);
+
+// Scalar boolean operations
+template void launch_tensor_scalar_equal<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_equal<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_equal<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_equal<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_equal<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_equal<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_equal<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_equal<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_equal<double, double>(const double*, double, bool*, size_t);
+
+template void launch_tensor_scalar_not_equal<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_not_equal<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_not_equal<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_not_equal<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_not_equal<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_not_equal<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_not_equal<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_not_equal<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_not_equal<double, double>(const double*, double, bool*, size_t);
+
+template void launch_tensor_scalar_less_than<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_less_than<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_less_than<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_less_than<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_less_than<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_less_than<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_less_than<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_less_than<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_less_than<double, double>(const double*, double, bool*, size_t);
+
+template void launch_tensor_scalar_less_equal<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_less_equal<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_less_equal<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_less_equal<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_less_equal<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_less_equal<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_less_equal<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_less_equal<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_less_equal<double, double>(const double*, double, bool*, size_t);
+
+template void launch_tensor_scalar_greater_than<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_than<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_than<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_greater_than<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_than<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_than<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_greater_than<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_than<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_than<double, double>(const double*, double, bool*, size_t);
+
+template void launch_tensor_scalar_greater_equal<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_greater_equal<double, double>(const double*, double, bool*, size_t);
+
+// Logical operations
+template void launch_tensor_logical_and<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_logical_and<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_logical_and<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_logical_and<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_logical_and<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_logical_and<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_logical_and<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_logical_and<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_logical_and<double, double>(const double*, const double*, bool*, size_t);
+template void launch_tensor_logical_and<bool, bool>(const bool*, const bool*, bool*, size_t);
+
+template void launch_tensor_logical_or<float, float>(const float*, const float*, bool*, size_t);
+template void launch_tensor_logical_or<float, int>(const float*, const int*, bool*, size_t);
+template void launch_tensor_logical_or<float, double>(const float*, const double*, bool*, size_t);
+template void launch_tensor_logical_or<int, float>(const int*, const float*, bool*, size_t);
+template void launch_tensor_logical_or<int, int>(const int*, const int*, bool*, size_t);
+template void launch_tensor_logical_or<int, double>(const int*, const double*, bool*, size_t);
+template void launch_tensor_logical_or<double, float>(const double*, const float*, bool*, size_t);
+template void launch_tensor_logical_or<double, int>(const double*, const int*, bool*, size_t);
+template void launch_tensor_logical_or<double, double>(const double*, const double*, bool*, size_t);
+template void launch_tensor_logical_or<bool, bool>(const bool*, const bool*, bool*, size_t);
+
+template void launch_tensor_scalar_logical_and<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_and<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_and<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_and<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_and<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_and<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_and<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_and<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_and<double, double>(const double*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_and<bool, bool>(const bool*, bool, bool*, size_t);
+
+template void launch_tensor_scalar_logical_or<float, float>(const float*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_or<float, int>(const float*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_or<float, double>(const float*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_or<int, float>(const int*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_or<int, int>(const int*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_or<int, double>(const int*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_or<double, float>(const double*, float, bool*, size_t);
+template void launch_tensor_scalar_logical_or<double, int>(const double*, int, bool*, size_t);
+template void launch_tensor_scalar_logical_or<double, double>(const double*, double, bool*, size_t);
+template void launch_tensor_scalar_logical_or<bool, bool>(const bool*, bool, bool*, size_t);
+
+template void launch_tensor_logical_not<float>(const float*, bool*, size_t);
+template void launch_tensor_logical_not<int>(const int*, bool*, size_t);
+template void launch_tensor_logical_not<double>(const double*, bool*, size_t);
+template void launch_tensor_logical_not<bool>(const bool*, bool*, size_t);
+
+template bool launch_tensor_any<float>(const float*, size_t);
+template bool launch_tensor_any<int>(const int*, size_t);
+template bool launch_tensor_any<double>(const double*, size_t);
+template bool launch_tensor_any<bool>(const bool*, size_t);
+
+template bool launch_tensor_all<float>(const float*, size_t);
+template bool launch_tensor_all<int>(const int*, size_t);
+template bool launch_tensor_all<double>(const double*, size_t);
+template bool launch_tensor_all<bool>(const bool*, size_t);
+
+// Advanced operations
+template void launch_tensor_dilate<float>(const float*, float*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_dilate<int>(const int*, int*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_dilate<double>(const double*, double*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+
+template void launch_tensor_pad<float>(const float*, float*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_pad<int>(const int*, int*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+template void launch_tensor_pad<double>(const double*, double*, const int*, const int*, const int*, const int*, const int*, int, int, int, size_t);
+
+// Dot product operations - all type combinations
+template void launch_tensor_dot<float, float, float>(const float*, const float*, float*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<float, int, float>(const float*, const int*, float*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<float, double, double>(const float*, const double*, double*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<int, float, float>(const int*, const float*, float*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<int, int, int>(const int*, const int*, int*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<int, double, double>(const int*, const double*, double*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<double, float, double>(const double*, const float*, double*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<double, int, double>(const double*, const int*, double*, int, int, int, int, int, int, bool, bool);
+template void launch_tensor_dot<double, double, double>(const double*, const double*, double*, int, int, int, int, int, int, bool, bool);
 
 }

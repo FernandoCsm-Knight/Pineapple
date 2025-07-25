@@ -1,9 +1,9 @@
-#include "pineapple.hpp"
+#include <pineapple/pineapple.hpp>
 
 #include <chrono>
 #include <iostream>
 
-#define SIZE 30
+#define SIZE 1000
 
 void reset(Tensor<float>& tensor, Tensor<float>& other) {
     for(size_t i = 0; i < SIZE; ++i) {
@@ -16,15 +16,15 @@ void reset(Tensor<float>& tensor, Tensor<float>& other) {
 }
 
 int main() {
-    
-    
+    omp_set_num_threads(16);
+
     Tensor<float> tensor(SIZE, SIZE);
     Tensor<float> other(SIZE, SIZE);
     reset(tensor, other);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    for(int i = 0; i < 1000; ++i) {
+    for(int i = 0; i < 10; ++i) {
         other = tensor.dot(other);
     }
 
@@ -40,13 +40,15 @@ int main() {
     
         start = std::chrono::high_resolution_clock::now();
     
-        for(int i = 0; i < 1000; ++i) {
+        for(int i = 0; i < 10; ++i) {
             other = tensor.dot(other);
         }
     
         end = std::chrono::high_resolution_clock::now();
         duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << "Execution time on GPU: " << duration.count() << " ms" << std::endl;
+    } else {
+        std::cout << "No GPU available." << std::endl;
     }
 
     return 0;

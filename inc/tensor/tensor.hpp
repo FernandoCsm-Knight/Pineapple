@@ -297,10 +297,7 @@ template <Numeric T> class Tensor: public Shapeable {
 
         // Device management
         
-#ifdef __NVCC__
         void to(Device target_device);
-#endif 
-
         Device get_device() const;
         bool is_cuda() const;
 
