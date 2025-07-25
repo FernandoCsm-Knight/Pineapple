@@ -17,12 +17,12 @@ std::tuple<Shape, Shape, Shape, Shape> Partition<T>::split_shape(float train_rat
 
     for(int i = 1; i < data.ndim(); ++i) {
         train_data_shape.add_dimension(data_shape[i]);
-        test_data_shape.add_dimension(data_shape[i]);
+        if(test_ratio > 0) test_data_shape.add_dimension(data_shape[i]);
     }
 
     for(int i = 1; i < target.ndim(); ++i) {
         train_target_shape.add_dimension(target_shape[i]);
-        test_target_shape.add_dimension(target_shape[i]);
+        if(test_ratio > 0) test_target_shape.add_dimension(target_shape[i]);
     }
 
     return std::make_tuple(train_data_shape, train_target_shape, test_data_shape, test_target_shape);
@@ -73,6 +73,9 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_
 
     Tensor<T> train_data(train_data_shape);
     Tensor<T> test_data(test_data_shape);
+
+    
+
     Tensor<T> train_target(train_target_shape);
     Tensor<T> test_target(test_target_shape);
 
@@ -122,6 +125,8 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::split(float
 
     Tensor<T> train_data(train_data_shape);
     Tensor<T> test_data(test_data_shape);
+    std::cout << test_data_shape[0] << std::endl;
+    std::cout << test_data.shape(0) << std::endl;
     Tensor<T> train_target(train_target_shape);
     Tensor<T> test_target(test_target_shape);
 

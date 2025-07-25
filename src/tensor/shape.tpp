@@ -63,7 +63,9 @@ Shape::Shape(const Shape& other) {
     len = other.len;
     dimensions = other.dimensions;
 
-    buff = new int[dimensions];
+    if(dimensions == 0) buff = new int[1]{ 0 };
+    else buff = new int[dimensions];
+    
     for(int i = 0; i < dimensions; ++i) {
         buff[i] = other.buff[i];
     }
@@ -93,7 +95,9 @@ Shape& Shape::operator=(const Shape& other) {
         len = other.len;
         dimensions = other.dimensions;
 
-        buff = new int[dimensions];
+        if(dimensions == 0) buff = new int[1]{ 0 };
+        else buff = new int[dimensions];
+        
         for(int i = 0; i < dimensions; ++i) {
             buff[i] = other.buff[i];
         }
