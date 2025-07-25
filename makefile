@@ -12,7 +12,7 @@ endif
 # Configuração do compilador baseada na opção CUDA
 ifeq ($(CUDA), 1)
 CXX      = nvcc
-CXXFLAGS = --extended-lambda -std=c++20 -DPINEAPPLE_CUDA_ENABLED -Xcompiler -fopenmp -Iinclude -Wno-deprecated-gpu-targets
+CXXFLAGS = --extended-lambda -std=c++20 -Xcompiler -fopenmp -Iinclude -Wno-deprecated-gpu-targets
 LDFLAGS  = -lcudart
 $(info Building with nvcc (CUDA enabled), using OpenMP)
 else

@@ -16,6 +16,8 @@ void reset(Tensor<float>& tensor, Tensor<float>& other) {
 }
 
 int main() {
+    
+    
     Tensor<float> tensor(SIZE, SIZE);
     Tensor<float> other(SIZE, SIZE);
     reset(tensor, other);
@@ -31,19 +33,21 @@ int main() {
 
     std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
 
-    reset(tensor, other);
-    tensor.to(Device::GPU);
-    other.to(Device::GPU);
-
-    start = std::chrono::high_resolution_clock::now();
-
-    for(int i = 0; i < 1000; ++i) {
-        other = tensor.dot(other);
+    if(pineapple::is_cuda_available()) {
+        reset(tensor, other);
+        tensor.to(Device::GPU);
+        other.to(Device::GPU);
+    
+        start = std::chrono::high_resolution_clock::now();
+    
+        for(int i = 0; i < 1000; ++i) {
+            other = tensor.dot(other);
+        }
+    
+        end = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "Execution time on GPU: " << duration.count() << " ms" << std::endl;
     }
-
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Execution time on GPU: " << duration.count() << " ms" << std::endl;
 
     return 0;
 }

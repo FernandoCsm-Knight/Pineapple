@@ -1,4 +1,4 @@
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #include "tensor_cuda_kernels.cu"
 
 namespace cuda_ops {

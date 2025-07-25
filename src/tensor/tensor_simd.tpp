@@ -3,8 +3,8 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 template <Numeric T>
@@ -154,7 +154,7 @@ Tensor<T>& Tensor<T>::change_tensor_scalar_simd(
     return *this;
 }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
 
 template <Numeric T>
 template <Numeric U>

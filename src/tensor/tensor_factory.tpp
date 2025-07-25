@@ -3,8 +3,8 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 // Private Constructor
@@ -89,7 +89,7 @@ template <Numeric T>
 Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other) { 
     device = other.device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (device == Device::GPU) {
         data = cuda_ops::cuda_malloc<T>(this->length());
         cuda_ops::cuda_memcpy_device_to_device(data, other.data, this->length());
@@ -124,7 +124,7 @@ template <Numeric U>
 Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) { 
     device = other.device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (device == Device::GPU) {
         data = cuda_ops::cuda_malloc<T>(this->length());
     } else
@@ -139,7 +139,7 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
         stride[i] = other.stride[i];
     }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (device == Device::GPU) {
         cuda_ops::launch_tensor_type_convert(other.data, data, this->length());
     } else
@@ -157,7 +157,7 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
 template <Numeric T>
 Tensor<T>::~Tensor() {
     if(owns_data) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (device == Device::GPU) {
             cuda_ops::cuda_free(data);
         } else
@@ -178,7 +178,7 @@ template <Numeric T>
 Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
     if(this != &other) {
         if(owns_data) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU) {
                 cuda_ops::cuda_free(this->data);
             } else
@@ -191,7 +191,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
             this->sh = other.shape();
             device = other.device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU) {
                 this->data = cuda_ops::cuda_malloc<T>(this->length());
             } else
@@ -207,7 +207,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
         }
 
         if(other.is_scalar()) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU) {
                 if (other.device == Device::GPU) {
                     T scalar_value;
@@ -220,7 +220,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
 #endif
             {
                 T scalar_value;
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
                 if (other.device == Device::GPU) {
                     cuda_ops::cuda_memcpy_device_to_host(&scalar_value, other.data, 1);
                 } else
@@ -235,7 +235,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
                 }
             }
         } else {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU && other.device == Device::GPU) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
             } else if (device == Device::GPU && other.device == Device::CPU) {
@@ -264,7 +264,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
                 throw std::invalid_argument("Cannot assign tensors with different sizes to a view");
             }
             
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU && other.device == Device::GPU) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
             } else if (device == Device::GPU && other.device == Device::CPU) {
@@ -280,7 +280,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
                 }
             }
         } else {            
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
             if (device == Device::GPU) {
                 cuda_ops::cuda_free(this->data);
             } else
@@ -308,7 +308,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
 
 template <Numeric T>
 Tensor<T>& Tensor<T>::operator=(const T& value) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (device == Device::GPU) {
         cuda_ops::launch_tensor_fill(data, value, this->length());
     } else
@@ -327,7 +327,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
     if(owns_data) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (device == Device::GPU) {
             cuda_ops::cuda_free(this->data);
         } else
@@ -339,7 +339,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
         delete[] stride;
         this->sh = other.shape();
         
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (device == Device::GPU) {
             this->data = cuda_ops::cuda_malloc<T>(this->length());
         } else
@@ -356,7 +356,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
 
     if(other.is_scalar()) {
         T scalar_value;
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (other.device == Device::GPU) {
             U gpu_scalar;
             cuda_ops::cuda_memcpy_device_to_host(&gpu_scalar, other.data, 1);
@@ -367,7 +367,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
             scalar_value = static_cast<T>(other.data[0]);
         }
         
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (device == Device::GPU) {
             cuda_ops::launch_tensor_fill(this->data, scalar_value, this->length());
         } else
@@ -379,7 +379,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
             }
         }
     } else {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (device == Device::GPU && other.device == Device::GPU) {
             if constexpr (std::is_same_v<T, U>) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
@@ -428,7 +428,7 @@ template <Numeric U>
 Tensor<T>& Tensor<T>::operator=(const U& scalar) {
     const T converted_scalar = static_cast<T>(scalar);
     
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (device == Device::GPU) {
         cuda_ops::launch_tensor_fill(data, converted_scalar, this->length());
     } else

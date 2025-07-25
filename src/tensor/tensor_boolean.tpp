@@ -2,14 +2,15 @@
 #define TENSOR_BOOLEAN_TPP
 
 #include "../../inc/tensor/tensor.hpp"
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator==(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_equal<T, U>);
     }
@@ -22,7 +23,7 @@ Tensor<bool> Tensor<T>::operator==(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator!=(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_not_equal<T, U>);
     }
@@ -35,7 +36,7 @@ Tensor<bool> Tensor<T>::operator!=(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator<(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_less_than<T, U>);
     }
@@ -48,7 +49,7 @@ Tensor<bool> Tensor<T>::operator<(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator<=(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_less_equal<T, U>);
     }
@@ -61,7 +62,7 @@ Tensor<bool> Tensor<T>::operator<=(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator>(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_greater_than<T, U>);
     }
@@ -74,7 +75,7 @@ Tensor<bool> Tensor<T>::operator>(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator>=(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_greater_equal<T, U>);
     }
@@ -87,7 +88,7 @@ Tensor<bool> Tensor<T>::operator>=(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator==(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_equal<T, U>);
     }
@@ -100,7 +101,7 @@ Tensor<bool> Tensor<T>::operator==(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator!=(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_not_equal<T, U>);
     }
@@ -113,7 +114,7 @@ Tensor<bool> Tensor<T>::operator!=(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator<(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_less_than<T, U>);
     }
@@ -126,7 +127,7 @@ Tensor<bool> Tensor<T>::operator<(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator<=(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_less_equal<T, U>);
     }
@@ -139,7 +140,7 @@ Tensor<bool> Tensor<T>::operator<=(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator>(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_greater_than<T, U>);
     }
@@ -152,7 +153,7 @@ Tensor<bool> Tensor<T>::operator>(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator>=(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_greater_equal<T, U>);
     }
@@ -165,7 +166,7 @@ Tensor<bool> Tensor<T>::operator>=(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator&&(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_logical_and<T, U>);
     }
@@ -178,7 +179,7 @@ Tensor<bool> Tensor<T>::operator&&(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator||(const Tensor<U>& other) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_comparison_op<U>(other, cuda_ops::launch_tensor_logical_or<T, U>);
     }
@@ -191,7 +192,7 @@ Tensor<bool> Tensor<T>::operator||(const Tensor<U>& other) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator&&(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_logical_and<T, U>);
     }
@@ -204,7 +205,7 @@ Tensor<bool> Tensor<T>::operator&&(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<bool> Tensor<T>::operator||(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_comparison_op<U>(scalar, cuda_ops::launch_tensor_scalar_logical_or<T, U>);
     }
@@ -216,7 +217,7 @@ Tensor<bool> Tensor<T>::operator||(const U& scalar) const {
 
 template <Numeric T>
 Tensor<bool> Tensor<T>::operator!() const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         Tensor<bool> result(this->shape());
         result.device = Device::GPU;
@@ -240,7 +241,7 @@ template <Numeric T>
 bool Tensor<T>::any() const {
     bool result = false;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         result = cuda_reduction_op(cuda_ops::launch_tensor_any<T>);
     } else
@@ -258,7 +259,7 @@ template <Numeric T>
 bool Tensor<T>::all() const {
     bool result = true;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         result = cuda_reduction_op(cuda_ops::launch_tensor_all<T>);
     } else

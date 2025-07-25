@@ -2,22 +2,59 @@
 
 This document explains how to install the Pineapple library on your Linux system.
 
-## Quick Installation
+## Installation Options
 
-Clone the repository and choose one of the installation methods below.
+The Pineapple library supports both CPU-only and CUDA-accelerated installations.
+
+### Quick Installation (CPU-only)
+
+Clone the repository and run the installation script:
 
 ```bash
 git clone https://github.com/FernandoCsm-Knight/Pineapple.git
 cd Pineapple
+./install.sh
 ```
+
+### CUDA Installation
+
+For GPU acceleration with CUDA support:
+
+```bash
+git clone https://github.com/FernandoCsm-Knight/Pineapple.git
+cd Pineapple
+CUDA=1 ./install.sh
+```
+
+## Installation Methods
 
 ### Method 1: Installation Script (Recommended)
 
+#### CPU-only installation:
 ```bash
 ./install.sh
 ```
 
-### Method 2: Manual Installation
+#### CUDA-enabled installation:
+```bash
+CUDA=1 ./install.sh
+```
+
+#### Custom installation path:
+```bash
+PREFIX=/opt/pineapple ./install.sh
+```
+
+#### Advanced CUDA options:
+```bash
+# Specific CUDA architectures
+CUDA=1 CUDA_ARCH=sm_75,sm_80,sm_86 ./install.sh
+
+# Custom path with CUDA
+CUDA=1 PREFIX=/opt/pineapple ./install.sh
+```
+
+### Method 2: Manual Installation (CPU-only)
 
 ```bash
 sudo mkdir -p /usr/local/include/pineapple

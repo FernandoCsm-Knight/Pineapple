@@ -52,7 +52,7 @@ template <Numeric T> class Tensor: public Shapeable {
             std::function<void(T&, const U&)> callback
         );
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         template <Numeric U>
         Tensor<std::common_type_t<T, U>> cuda_binary_op(
             const Tensor<U>& other,
@@ -77,7 +77,6 @@ template <Numeric T> class Tensor: public Shapeable {
             void (*cuda_kernel)(T*, U, size_t)
         );
 
-        // Helper functions for CUDA boolean operations
         template <Numeric U>
         Tensor<bool> cuda_comparison_op(
             const Tensor<U>& other,
@@ -298,7 +297,10 @@ template <Numeric T> class Tensor: public Shapeable {
 
         // Device management
         
+#ifdef __NVCC__
         void to(Device target_device);
+#endif 
+
         Device get_device() const;
         bool is_cuda() const;
 

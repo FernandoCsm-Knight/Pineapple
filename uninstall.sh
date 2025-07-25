@@ -8,6 +8,7 @@ set -e
 LIBRARY_NAME="pineapple"
 PREFIX="${PREFIX:-/usr/local}"
 INCLUDEDIR="$PREFIX/include"
+LIBDIR="$PREFIX/lib"
 PKGCONFIGDIR="$PREFIX/lib/pkgconfig"
 
 # Colors for output
@@ -49,7 +50,7 @@ uninstall_library() {
     print_info "Uninstalling Pineapple library..."
     
     # Check if library is installed
-    if [ ! -d "$INCLUDEDIR/$LIBRARY_NAME" ] && [ ! -f "$PKGCONFIGDIR/pineapple.pc" ]; then
+    if [ ! -d "$INCLUDEDIR/$LIBRARY_NAME" ] && [ ! -f "$PKGCONFIGDIR/pineapple.pc" ] && [ ! -f "$LIBDIR/libpineapple_cuda.a" ]; then
         print_warning "Pineapple library does not appear to be installed"
         return 0
     fi
@@ -59,6 +60,19 @@ uninstall_library() {
         print_info "Removing headers..."
         $SUDO rm -rf "$INCLUDEDIR/$LIBRARY_NAME"
         print_success "Headers removed"
+    fi
+    
+    # Remove CUDA libraries
+    if [ -f "$LIBDIR/libpineapple_cuda.a" ] || [ -f "$LIBDIR/libpineapple_cuda.so" ]; then
+        print_info "Removing CUDA libraries..."
+        $SUDO rm -f "$LIBDIR"/libpineapple_cuda.*
+        
+        # Update library cache
+        if command -v ldconfig >/dev/null 2>&1; then
+            $SUDO ldconfig
+        fi
+        
+        print_success "CUDA libraries removed"
     fi
     
     # Remove pkg-config

@@ -3,8 +3,8 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 template <Numeric T>
@@ -14,7 +14,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) co
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if(this->device == Device::GPU && this->shape() == other.shape()) {
         return cuda_binary_op(other, cuda_ops::launch_tensor_add<T, U, std::common_type_t<T, U>>);
     }
@@ -32,7 +32,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) co
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->shape() == other.shape()) {
         return cuda_binary_op(other, cuda_ops::launch_tensor_subtract<T, U, std::common_type_t<T, U>>);
     }
@@ -50,7 +50,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) co
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->shape() == other.shape()) {
         return cuda_binary_op(other, cuda_ops::launch_tensor_multiply<T, U, std::common_type_t<T, U>>);
     }
@@ -68,7 +68,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) co
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->shape() == other.shape()) {
         return cuda_binary_op(other, cuda_ops::launch_tensor_divide<T, U, std::common_type_t<T, U>>);
     }
@@ -82,7 +82,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_add<T, U, std::common_type_t<T, U>>);
     }
@@ -96,7 +96,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_subtract<T, U, std::common_type_t<T, U>>);
     }
@@ -110,7 +110,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_multiply<T, U, std::common_type_t<T, U>>);
     }
@@ -124,7 +124,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const U& scalar) const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_divide<T, U, std::common_type_t<T, U>>);
     }
@@ -138,7 +138,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const U& scalar) const {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator+=(const Tensor<U>& other) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_add<T, U>);
     }
@@ -152,7 +152,7 @@ Tensor<T>& Tensor<T>::operator+=(const Tensor<U>& other) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator-=(const Tensor<U>& other) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_subtract<T, U>);
     }
@@ -166,7 +166,7 @@ Tensor<T>& Tensor<T>::operator-=(const Tensor<U>& other) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator*=(const Tensor<U>& other) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_multiply<T, U>);
     }
@@ -180,7 +180,7 @@ Tensor<T>& Tensor<T>::operator*=(const Tensor<U>& other) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator/=(const Tensor<U>& other) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_divide<T, U>);
     }
@@ -194,7 +194,7 @@ Tensor<T>& Tensor<T>::operator/=(const Tensor<U>& other) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator+=(const U& scalar) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_add<T, U>);
     }
@@ -208,7 +208,7 @@ Tensor<T>& Tensor<T>::operator+=(const U& scalar) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator-=(const U& scalar) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_subtract<T, U>);
     }
@@ -222,7 +222,7 @@ Tensor<T>& Tensor<T>::operator-=(const U& scalar) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator*=(const U& scalar) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_multiply<T, U>);
     }
@@ -236,7 +236,7 @@ Tensor<T>& Tensor<T>::operator*=(const U& scalar) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator/=(const U& scalar) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_divide<T, U>);
     }

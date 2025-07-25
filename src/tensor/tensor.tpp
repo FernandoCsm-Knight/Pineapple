@@ -3,8 +3,8 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 // Helper methods
@@ -118,7 +118,7 @@ T* Tensor<T>::data_ptr() const {
 
 template <Numeric T>
 T Tensor<T>::min() const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_ops::launch_tensor_min(this->data, this->length());
     }
@@ -136,7 +136,7 @@ T Tensor<T>::min() const {
 
 template <Numeric T>
 T Tensor<T>::max() const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_ops::launch_tensor_max(this->data, this->length());
     }
@@ -160,7 +160,7 @@ Tensor<T> Tensor<T>::normalize() const {
     Tensor<T> result(this->shape());
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -246,7 +246,7 @@ Tensor<T> Tensor<T>::sum(int axis, bool keep_dimension) const {
             result = Tensor<T>(result_shape);
         } 
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (this->device == Device::GPU) {
             total = cuda_ops::launch_tensor_sum(this->data, this->length());
         } else
@@ -310,7 +310,7 @@ Tensor<T> Tensor<T>::pow(double exponent) const {
     Tensor<T> result(this->shape());
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -333,7 +333,7 @@ Tensor<T> Tensor<T>::pow(double exponent) const {
 
 template <Numeric T>
 T Tensor<T>::mean() const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return this->length() == 0 ? 0 : cuda_ops::launch_tensor_sum(this->data, this->length()) / this->length();
     }
@@ -345,7 +345,7 @@ template <Numeric T>
 T Tensor<T>::var() const {
     T mean_value = mean();
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_ops::launch_tensor_variance(this->data, mean_value, this->length());
     }
@@ -364,7 +364,7 @@ template <Numeric T>
 T Tensor<T>::std() const {
     T variance = var();
     
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         // Para GPU, calculamos sqrt diretamente
         T* d_variance;
@@ -393,7 +393,7 @@ Tensor<T> Tensor<T>::abs() const {
     Tensor<T> result(this->shape());
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -416,7 +416,7 @@ Tensor<T> Tensor<T>::abs() const {
 
 template <Numeric T>
 void Tensor<T>::fill(const T& value) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         cuda_ops::launch_tensor_fill(this->data, value, this->length());
         return;
@@ -441,7 +441,7 @@ Tensor<T> Tensor<T>::squeeze() const {
     result.device = this->device;
 
     if(valid) {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
         if (this->device == Device::GPU) {
             if (result.owns_data) {
                 delete[] result.data;
@@ -475,7 +475,7 @@ Tensor<T> Tensor<T>::unsqueeze(int idx) const {
     Tensor<T> result(new_shape);
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -505,7 +505,7 @@ Tensor<T> Tensor<T>::reshape(Shape new_shape) const {
     Tensor<T> result(new_shape);
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -540,7 +540,7 @@ Tensor<T> Tensor<T>::slice(int start, int end, int step) const {
     int new_size = (end - start) / step;
     Tensor<T> result(new_size);
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         // Aloca dados para GPU se necessário
         result.to(Device::GPU);
@@ -551,7 +551,7 @@ Tensor<T> Tensor<T>::slice(int start, int end, int step) const {
         for(int i = 0; i < new_size; ++i) {
             result.data[i] = this->data[start + i * step];
         }
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     }
 #endif
 
@@ -574,7 +574,7 @@ Tensor<T> Tensor<T>::clip(const T& min_val, const T& max_val) const {
     Tensor<T> result(this->shape());
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;

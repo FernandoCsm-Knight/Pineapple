@@ -3,13 +3,13 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 template <Numeric T>
 T Tensor<T>::norm() const {
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         return cuda_ops::launch_tensor_norm(this->data, this->length());
     }
@@ -47,7 +47,7 @@ Tensor<T> Tensor<T>::dilate(int size, std::vector<int> axes) const {
     Tensor<T> result(new_shape, T(0));
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -153,7 +153,7 @@ Tensor<T> Tensor<T>::pad(int size, std::vector<int> axes) const {
     Tensor<T> result(new_shape, T(0));
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -254,7 +254,7 @@ Tensor<T> Tensor<T>::flip(std::vector<int> axes) const {
     Tensor<T> result(this->shape());
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -493,7 +493,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
     Tensor<R> result(result_shape);
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;
@@ -550,7 +550,7 @@ Tensor<T> Tensor<T>::transpose() const {
     Tensor<T> result(this->shape(1), this->shape(0));
     result.device = this->device;
 
-#ifdef PINEAPPLE_CUDA_ENABLED
+#ifdef __NVCC__
     if (this->device == Device::GPU) {
         if (result.owns_data) {
             delete[] result.data;

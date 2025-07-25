@@ -3,16 +3,19 @@
 
 #include "../../inc/tensor/tensor.hpp"
 
-#ifdef PINEAPPLE_CUDA_ENABLED
-#include "../../inc/tensor/tensor_cuda_wrappers.hpp"
+#ifdef __NVCC__
+#include "../../inc/device/tensor_cuda_wrappers.hpp"
 #endif
 
 // Device management methods
+
+#ifdef __NVCC__
+
 template <Numeric T>
 void Tensor<T>::to(Device target_device) {
     if(device != target_device) {
-        #ifdef PINEAPPLE_CUDA_ENABLED
-            if (target_device == Device::GPU) {
+        #ifdef __NVCC__
+            if(target_device == Device::GPU) {
                 T* gpu_data = cuda_ops::cuda_malloc<T>(this->length());
                 cuda_ops::cuda_memcpy_host_to_device(gpu_data, data, this->length());
                 
@@ -38,6 +41,8 @@ void Tensor<T>::to(Device target_device) {
         #endif
     }
 }
+
+#endif 
 
 template <Numeric T>
 Device Tensor<T>::get_device() const {

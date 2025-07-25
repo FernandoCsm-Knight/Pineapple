@@ -69,4 +69,8 @@
 #include "inc/generator.hpp"
 #include "inc/data/partition.hpp"
 
+// Device detection
+
+#include "inc/device/cuda_detector.hpp"
+
 #endif
