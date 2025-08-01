@@ -16,6 +16,12 @@ SGD<T>::~SGD() {
 }
 
 template <Numeric T>
+void SGD<T>::to(Device target_device) {
+    if(weight_v) weight_v->to(target_device);
+    if(bias_v) bias_v->to(target_device);
+}
+
+template <Numeric T>
 Optimizer<T>* SGD<T>::copy() const {
     return new SGD<T>(this->learning_rate, momentum);
 }

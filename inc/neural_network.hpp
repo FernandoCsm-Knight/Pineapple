@@ -33,6 +33,7 @@ template <Numeric T> class NeuralNetwork: public Layer<T> {
 
         ~NeuralNetwork();
 
+        void to(Device target_device) override;
         Tensor<T> forward(const Tensor<T>& input) override;
         Tensor<T> backward(const Tensor<T>& grad_output) override;
 

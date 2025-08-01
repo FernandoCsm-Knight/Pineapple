@@ -16,6 +16,7 @@ template <Numeric T> class Metric {
         virtual ~Metric() = default;
         
         inline Average average_type() const { return average; }
+        virtual void to(Device target_device) {};
 
         virtual std::string name() const = 0;
         virtual float compute(int TP, int TN, int FP, int FN) const = 0;

@@ -13,7 +13,7 @@ endif
 ifeq ($(CUDA), 1)
 CXX      = nvcc
 CXXFLAGS = --extended-lambda -std=c++20 -Xcompiler -fopenmp -Iinclude -Wno-deprecated-gpu-targets
-LDFLAGS  = -lcudart
+LDFLAGS  = -lcudart -lcurand
 $(info Building with nvcc (CUDA enabled), using OpenMP)
 else
 CXX      = g++

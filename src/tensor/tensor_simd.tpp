@@ -198,6 +198,99 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_scalar_op(
 
 template <Numeric T>
 template <Numeric U>
+Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_broadcast_op(
+    const Tensor<U>& other,
+    int operation
+) const {
+    using R = std::common_type_t<T, U>;
+    
+    // Determine result shape (broadcast to the larger tensor)
+    Shape result_shape = this->shape();
+    if (other.length() > this->length()) {
+        result_shape = other.shape();
+    }
+    
+    Tensor<R> result(result_shape);
+    result.device = Device::GPU;
+    
+    if (result.owns_data) {
+        delete[] result.data;
+    }
+    result.data = cuda_ops::cuda_malloc<R>(result.length());
+    result.owns_data = true;
+    
+    // Calculate strides for broadcast
+    const int result_ndim = result_shape.ndim();
+    
+    // Allocate device memory for strides and shapes
+    int* d_a_strides = cuda_ops::cuda_malloc<int>(result_ndim);
+    int* d_b_strides = cuda_ops::cuda_malloc<int>(result_ndim);
+    int* d_result_strides = cuda_ops::cuda_malloc<int>(result_ndim);
+    int* d_shape = cuda_ops::cuda_malloc<int>(result_ndim);
+    
+    // Prepare host arrays
+    std::vector<int> a_strides(result_ndim, 0);
+    std::vector<int> b_strides(result_ndim, 0);
+    std::vector<int> result_strides(result_ndim);
+    std::vector<int> shape_array(result_ndim);
+    
+    // Calculate result strides
+    result_strides[result_ndim - 1] = 1;
+    for (int i = result_ndim - 2; i >= 0; --i) {
+        result_strides[i] = result_strides[i + 1] * result_shape[i + 1];
+    }
+    
+    // Calculate strides for tensor a (this)
+    const int a_offset = result_ndim - this->ndim();
+    for (int i = 0; i < this->ndim(); ++i) {
+        const int result_dim = a_offset + i;
+        if (this->shape(i) == result_shape[result_dim]) {
+            a_strides[result_dim] = this->stride[i];
+        } else if (this->shape(i) == 1) {
+            a_strides[result_dim] = 0; // Broadcasting dimension
+        }
+    }
+    
+    // Calculate strides for tensor b (other)
+    const int b_offset = result_ndim - other.ndim();
+    for (int i = 0; i < other.ndim(); ++i) {
+        const int result_dim = b_offset + i;
+        if (other.shape(i) == result_shape[result_dim]) {
+            b_strides[result_dim] = other.stride[i];
+        } else if (other.shape(i) == 1) {
+            b_strides[result_dim] = 0; // Broadcasting dimension
+        }
+    }
+    
+    // Copy shape to array
+    for (int i = 0; i < result_ndim; ++i) {
+        shape_array[i] = result_shape[i];
+    }
+    
+    // Copy to device
+    cuda_ops::cuda_memcpy_host_to_device(d_a_strides, a_strides.data(), result_ndim);
+    cuda_ops::cuda_memcpy_host_to_device(d_b_strides, b_strides.data(), result_ndim);
+    cuda_ops::cuda_memcpy_host_to_device(d_result_strides, result_strides.data(), result_ndim);
+    cuda_ops::cuda_memcpy_host_to_device(d_shape, shape_array.data(), result_ndim);
+    
+    // Launch broadcast kernel
+    cuda_ops::launch_tensor_broadcast<T, U, R>(
+        this->data, other.data, result.data,
+        d_a_strides, d_b_strides, d_result_strides, d_shape,
+        result.length(), result_ndim, operation
+    );
+    
+    // Free device memory
+    cuda_ops::cuda_free(d_a_strides);
+    cuda_ops::cuda_free(d_b_strides);
+    cuda_ops::cuda_free(d_result_strides);
+    cuda_ops::cuda_free(d_shape);
+    
+    return result;
+}
+
+template <Numeric T>
+template <Numeric U>
 Tensor<T>& Tensor<T>::cuda_inplace_tensor_op(
     const Tensor<U>& other,
     void (*cuda_kernel)(T*, const U*, size_t)

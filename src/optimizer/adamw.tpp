@@ -22,6 +22,14 @@ AdamW<T>::~AdamW() {
 }
 
 template <Numeric T>
+void AdamW<T>::to(Device target_device) {
+    if(weight_m) weight_m->to(target_device);
+    if(weight_v) weight_v->to(target_device);
+    if(bias_m) bias_m->to(target_device);
+    if(bias_v) bias_v->to(target_device);
+}
+
+template <Numeric T>
 Optimizer<T>* AdamW<T>::copy() const {
     return new AdamW<T>(this->learning_rate, weight_decay, beta1, beta2, epsilon);
 }

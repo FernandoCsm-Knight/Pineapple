@@ -36,8 +36,8 @@ __global__ void tensor_inplace_scalar_kernel(T* a, U scalar, size_t size, F oper
 template<typename T, typename U, typename R>
 __global__ void tensor_broadcast_kernel(
     const T* a, const U* b, R* result,
-    const size_t* a_strides, const size_t* b_strides,
-    const size_t* result_strides, const int* shape,
+    const int* a_strides, const int* b_strides,
+    const int* result_strides, const int* shape,
     size_t total_elements, int ndim, int operation
 ) {
     const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;

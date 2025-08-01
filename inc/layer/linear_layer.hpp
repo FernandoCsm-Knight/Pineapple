@@ -19,6 +19,7 @@ template <Numeric T> class LinearLayer: public Layer<T> {
     public:
         LinearLayer(int in_features, int out_features);
 
+        void to(Device target_device) override;
         Tensor<T> forward(const Tensor<T>& input) override;
         Tensor<T> backward(const Tensor<T>& grad_weights) override;
 

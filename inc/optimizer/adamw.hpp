@@ -22,6 +22,7 @@ template <Numeric T> class AdamW: public Optimizer<T> {
         AdamW(T learning_rate, T weight_decay = 0.01, T beta1 = 0.9, T beta2 = 0.999, T epsilon = 1e-8);
         ~AdamW();
 
+        void to(Device target_device) override;
         Optimizer<T>* copy() const override;
 
         void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias) override;

@@ -44,6 +44,13 @@ NeuralNetwork<T>::~NeuralNetwork() {
 // Methods
 
 template <Numeric T>
+void NeuralNetwork<T>::to(Device target_device) {
+    model->to(target_device);
+    if(metrics) metrics->to(target_device);
+    loss_function->to(target_device);
+}
+
+template <Numeric T>
 Tensor<T> NeuralNetwork<T>::forward(const Tensor<T>& input) {
     return model->forward(input);
 }
@@ -69,7 +76,10 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
 
         if(metrics) metrics->reset();
         
-        for(const auto& [batch_X, batch_y] : train_loader) {
+        for(auto [batch_X, batch_y] : train_loader) {
+            batch_X.to(Device::GPU);
+            batch_y.to(Device::GPU);
+
             Tensor<T> predictions = forward(batch_X);
             
             const T loss = loss_function->compute(predictions, batch_y);
@@ -79,17 +89,19 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             
             backward(loss_function->gradient(predictions, batch_y));
         }
-        
+
         if ((epoch + 1) % 10 == 0 || epoch == 0) {
             std::cout << "Época " << (epoch + 1) << ", Train Loss: " << (total_loss / train_loader.num_batches());
         
             if(metrics) {
+                metrics->to(Device::CPU);
                 std::set<std::string> all_metrics = metrics->all_metrics();
                 
                 for(const std::string& metric_name : all_metrics) {
                     const float metric_value = metrics->compute(metric_name);
                     std::cout << ", " << metric_name << ": " << metric_value;
                 }
+                metrics->to(Device::GPU);
             }
 
             std::cout << std::endl;
@@ -98,7 +110,10 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
         if(validation > 0.0f) {
             total_loss = 0;
 
-            for(const auto& [val_X, val_y] : validation_loader) {
+            for(auto [val_X, val_y] : validation_loader) {
+                val_X.to(Device::GPU);
+                val_y.to(Device::GPU);
+
                 Tensor<T> val_predictions = forward(val_X);
 
                 const T val_loss = loss_function->compute(val_predictions, val_y);
@@ -111,12 +126,14 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
                 std::cout << "Época " << (epoch + 1) << ", Validation Loss: " << (total_loss / validation_loader.num_batches());
                 
                 if(metrics) {
+                    metrics->to(Device::CPU);
                     std::set<std::string> all_metrics = metrics->all_metrics();
                     
                     for(const std::string& metric_name : all_metrics) {
                         const float metric_value = metrics->compute(metric_name);
                         std::cout << ", " << metric_name << ": " << metric_value;
                     }
+                    metrics->to(Device::GPU);
                 }
 
                 std::cout << std::endl;

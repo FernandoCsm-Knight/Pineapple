@@ -89,6 +89,12 @@ template <Numeric T> class Tensor: public Shapeable {
             void (*cuda_kernel)(const T*, U, bool*, size_t)
         ) const;
 
+        template <Numeric U>
+        Tensor<std::common_type_t<T, U>> cuda_broadcast_op(
+            const Tensor<U>& other,
+            int operation
+        ) const;
+
         bool cuda_reduction_op(
             bool (*cuda_kernel)(const T*, size_t)
         ) const;

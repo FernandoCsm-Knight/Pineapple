@@ -22,6 +22,7 @@ template <Numeric T> class MetricCollection {
         std::set<std::string> all_metrics() const;
         inline int size() const;
 
+        virtual void to(Device target_device) = 0;
         virtual void update(const Tensor<T>& predictions, const Tensor<T>& targets) = 0;
         virtual float compute(const std::string& metric, int class_idx = -1) const = 0;
     

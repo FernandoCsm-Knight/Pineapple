@@ -15,6 +15,7 @@ template <Numeric T> class Activation: public Layer<T> {
     public:
         Activation() = default;
 
+        void to(Device target_device) override;
         virtual Tensor<T> forward(const Tensor<T>& input) override;
         virtual Tensor<T> backward(const Tensor<T>& grad_output) override;
         

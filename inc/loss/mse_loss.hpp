@@ -5,9 +5,6 @@
 #include "../abstract/loss_function.hpp"
 
 template <Numeric T> class MSELoss: public LossFunction<T> {
-    private:
-        Tensor<T> last_input;
-
     public:
         T compute(const Tensor<T>& predictions, const Tensor<T>& targets) const override;
         Tensor<T> gradient(const Tensor<T>& predictions, const Tensor<T>& targets) const override;

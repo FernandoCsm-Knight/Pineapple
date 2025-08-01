@@ -41,6 +41,8 @@ int main() {
         cm
     );
 
+    model.to(Device::GPU);
+
     std::cout << "Iniciando treinamento..." << std::endl;
     model.train(X_train, y_train, EPOCHS, BATCH_SIZE);
     

@@ -15,6 +15,7 @@ template <Numeric T> class Dropout: public Layer<T> {
     public:
         Dropout(T dropout_rate = 0.5);
 
+        void to(Device target_device) override;
         Tensor<T> forward(const Tensor<T>& input) override;
         Tensor<T> backward(const Tensor<T>& grad_output) override;
 

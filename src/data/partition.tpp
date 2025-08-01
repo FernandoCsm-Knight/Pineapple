@@ -73,9 +73,6 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::stratified_
 
     Tensor<T> train_data(train_data_shape);
     Tensor<T> test_data(test_data_shape);
-
-    
-
     Tensor<T> train_target(train_target_shape);
     Tensor<T> test_target(test_target_shape);
 
@@ -125,8 +122,6 @@ std::tuple<Tensor<T>, Tensor<T>, Tensor<T>, Tensor<T>> Partition<T>::split(float
 
     Tensor<T> train_data(train_data_shape);
     Tensor<T> test_data(test_data_shape);
-    std::cout << test_data_shape[0] << std::endl;
-    std::cout << test_data.shape(0) << std::endl;
     Tensor<T> train_target(train_target_shape);
     Tensor<T> test_target(test_target_shape);
 

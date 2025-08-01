@@ -3,7 +3,6 @@
 
 namespace cuda_ops {
 
-// Memory operations
 template<typename T>
 T* cuda_malloc(size_t size) {
     T* ptr;
@@ -31,7 +30,6 @@ void cuda_memcpy_device_to_device(T* dst, const T* src, size_t size) {
     CUDA_CHECK(cudaMemcpy(dst, src, size * sizeof(T), cudaMemcpyDeviceToDevice));
 }
 
-// Element-wise operations
 template<typename T, typename U, typename R>
 void launch_tensor_add(const T* a, const U* b, R* result, size_t size) {
     const int block_size = 256;
@@ -82,12 +80,28 @@ void launch_tensor_divide(const T* a, const U* b, R* result, size_t size) {
     
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
+}
+
+template<typename T, typename U, typename R>
+void launch_tensor_broadcast(
+    const T* a, const U* b, R* result,
+    const int* a_strides, const int* b_strides,
+    const int* result_strides, const int* shape,
+    size_t total_elements, int ndim, int operation
+) {
+    const int block_size = 256;
+    dim3 grid = calculate_grid_block(total_elements, block_size);
+    dim3 block(block_size);
+    
+    tensor_broadcast_kernel<<<grid, block>>>(
+        a, b, result, a_strides, b_strides, result_strides,
+        shape, total_elements, ndim, operation
+    );
     
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Copy
 template<typename T>
 void launch_tensor_copy(const T* src, T* dst, size_t size) {
     const int block_size = 256;
@@ -99,7 +113,6 @@ void launch_tensor_copy(const T* src, T* dst, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Type conversion
 template<typename T, typename U>
 void launch_tensor_type_convert(const U* src, T* dst, size_t size) {
     const int block_size = 256;
@@ -111,7 +124,6 @@ void launch_tensor_type_convert(const U* src, T* dst, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Fill
 template<typename T>
 void launch_tensor_fill(T* data, T value, size_t size) {
     const int block_size = 256;
@@ -123,7 +135,6 @@ void launch_tensor_fill(T* data, T value, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Scalar operations
 template<typename T, typename U, typename R>
 void launch_tensor_scalar_add(const T* a, U scalar, R* result, size_t size) {
     const int block_size = 256;
@@ -176,7 +187,6 @@ void launch_tensor_scalar_divide(const T* a, U scalar, R* result, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// In-place operations
 template<typename T, typename U>
 void launch_tensor_inplace_add(T* a, const U* b, size_t size) {
     const int block_size = 256;
@@ -229,7 +239,6 @@ void launch_tensor_inplace_divide(T* a, const U* b, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// In-place scalar operations
 template<typename T, typename U>
 void launch_tensor_inplace_scalar_add(T* a, U scalar, size_t size) {
     const int block_size = 256;
@@ -282,7 +291,6 @@ void launch_tensor_inplace_scalar_divide(T* a, U scalar, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Element-wise operations
 template<typename T>
 void launch_tensor_abs(const T* a, T* result, size_t size) {
     const int block_size = 256;
@@ -316,7 +324,6 @@ void launch_tensor_normalize(const T* a, T* result, T min_val, T max_val, size_t
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Matrix operations
 template<typename T>
 void launch_tensor_transpose(const T* a, T* result, int rows, int cols) {
     dim3 block(16, 16);
@@ -340,7 +347,6 @@ void launch_tensor_flip(const T* a, T* result, const int* shape, const int* axes
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Reduction operations
 template<typename T>
 T launch_tensor_min(const T* data, size_t size) {
     const int block_size = 256;
@@ -432,7 +438,6 @@ T launch_tensor_norm(const T* data, size_t size) {
     return std::sqrt(sum_of_squares);
 }
 
-// New reduction operations
 template<typename T>
 T launch_tensor_variance(const T* data, T mean_val, size_t size) {
     const int block_size = 256;
@@ -455,10 +460,9 @@ T launch_tensor_variance(const T* data, T mean_val, size_t size) {
     delete[] h_result;
     CUDA_CHECK(cudaFree(d_result));
     
-    return final_var / T(size - 1);  // Population variance to match CPU
+    return final_var / T(size - 1);
 }
 
-// Slice operation
 template<typename T>
 void launch_tensor_slice(const T* data, T* result, int start, int step, size_t new_size) {
     const int block_size = 256;
@@ -470,7 +474,6 @@ void launch_tensor_slice(const T* data, T* result, int start, int step, size_t n
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Square root operation
 template<typename T>
 void launch_tensor_sqrt(const T* data, T* result, size_t size) {
     const int block_size = 256;
@@ -482,7 +485,6 @@ void launch_tensor_sqrt(const T* data, T* result, size_t size) {
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Boolean operations
 template<typename T, typename U>
 void launch_tensor_equal(const T* a, const U* b, bool* result, size_t size) {
     const int block_size = 256;
@@ -561,7 +563,6 @@ void launch_tensor_greater_equal(const T* a, const U* b, bool* result, size_t si
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Scalar boolean operations
 template<typename T, typename U>
 void launch_tensor_scalar_equal(const T* a, U scalar, bool* result, size_t size) {
     const int block_size = 256;
@@ -640,7 +641,6 @@ void launch_tensor_scalar_greater_equal(const T* a, U scalar, bool* result, size
     CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-// Logical operations
 template<typename T, typename U>
 void launch_tensor_logical_and(const T* a, const U* b, bool* result, size_t size) {
     const int block_size = 256;
@@ -850,6 +850,12 @@ template void cuda_memcpy_host_to_device<bool>(bool*, const bool*, size_t);
 template void cuda_memcpy_device_to_host<bool>(bool*, const bool*, size_t);
 template void cuda_memcpy_device_to_device<bool>(bool*, const bool*, size_t);
 
+template size_t* cuda_malloc<size_t>(size_t);
+template void cuda_free<size_t>(size_t*);
+template void cuda_memcpy_host_to_device<size_t>(size_t*, const size_t*, size_t);
+template void cuda_memcpy_device_to_host<size_t>(size_t*, const size_t*, size_t);
+template void cuda_memcpy_device_to_device<size_t>(size_t*, const size_t*, size_t);
+
 // Element-wise operations - all type combinations
 template void launch_tensor_add<float, float, float>(const float*, const float*, float*, size_t);
 template void launch_tensor_add<float, int, float>(const float*, const int*, float*, size_t);
@@ -890,6 +896,17 @@ template void launch_tensor_divide<int, double, double>(const int*, const double
 template void launch_tensor_divide<double, float, double>(const double*, const float*, double*, size_t);
 template void launch_tensor_divide<double, int, double>(const double*, const int*, double*, size_t);
 template void launch_tensor_divide<double, double, double>(const double*, const double*, double*, size_t);
+
+// Broadcast operations
+template void launch_tensor_broadcast<float, float, float>(const float*, const float*, float*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<float, int, float>(const float*, const int*, float*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<float, double, double>(const float*, const double*, double*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<int, float, float>(const int*, const float*, float*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<int, int, int>(const int*, const int*, int*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<int, double, double>(const int*, const double*, double*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<double, float, double>(const double*, const float*, double*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<double, int, double>(const double*, const int*, double*, const int*, const int*, const int*, const int*, size_t, int, int);
+template void launch_tensor_broadcast<double, double, double>(const double*, const double*, double*, const int*, const int*, const int*, const int*, size_t, int, int);
 
 // Copy operations
 template void launch_tensor_copy<float>(const float*, float*, size_t);

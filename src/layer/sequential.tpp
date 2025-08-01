@@ -24,6 +24,15 @@ Sequential<T>::~Sequential() {
 }
 
 template <Numeric T>
+void Sequential<T>::to(Device target_device) {
+    for(int i = 0; i < size; ++i) {
+        layers[i]->to(target_device);
+    }
+
+    if(this->optimizer) this->optimizer->to(target_device);
+}
+
+template <Numeric T>
 Tensor<T> Sequential<T>::forward(const Tensor<T>& input) {
     Tensor<T> output = input;
 

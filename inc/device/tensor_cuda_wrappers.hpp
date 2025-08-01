@@ -1,28 +1,12 @@
 #ifndef TENSOR_CUDA_WRAPPERS_HPP
 #define TENSOR_CUDA_WRAPPERS_HPP
 
-#include <cuda_runtime.h>
+#include "cuda_macros.hpp"
 #include <type_traits>
 #include <stdexcept>
 #include <iostream>
 
 namespace cuda_ops {
-
-// Macro para verificar erros CUDA
-#define CUDA_CHECK(call) \
-    do { \
-        cudaError_t error = call; \
-        if (error != cudaSuccess) { \
-            std::cerr << "CUDA error at " << __FILE__ << ":" << __LINE__ << " - " << cudaGetErrorString(error) << std::endl; \
-            throw std::runtime_error("CUDA error: " + std::string(cudaGetErrorString(error))); \
-        } \
-    } while(0)
-
-// Função auxiliar para calcular grid e block dimensions
-inline dim3 calculate_grid_block(size_t size, int block_size = 256) {
-    const int grid_size = (size + block_size - 1) / block_size;
-    return dim3(grid_size, 1, 1);
-}
 
 // Declarações das funções wrapper (implementações em .cu)
 template<typename T, typename U, typename R>
@@ -76,8 +60,8 @@ void launch_tensor_inplace_scalar_divide(T* a, U scalar, size_t size);
 template<typename T, typename U, typename R>
 void launch_tensor_broadcast(
     const T* a, const U* b, R* result,
-    const size_t* a_strides, const size_t* b_strides,
-    const size_t* result_strides, const int* shape,
+    const int* a_strides, const int* b_strides,
+    const int* result_strides, const int* shape,
     size_t total_elements, int ndim, int operation
 );
 

@@ -15,8 +15,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) co
     }
 
 #ifdef __NVCC__
-    if(this->device == Device::GPU && this->shape() == other.shape()) {
-        return cuda_binary_op(other, cuda_ops::launch_tensor_add<T, U, std::common_type_t<T, U>>);
+    if(this->device == Device::GPU) {
+        if(this->shape() == other.shape()) {
+            return cuda_binary_op(other, cuda_ops::launch_tensor_add<T, U, std::common_type_t<T, U>>);
+        } else if(this->can_broadcast(other)) {
+            return cuda_broadcast_op(other, 0); // 0 = addition
+        }
     }
 #endif
     
@@ -33,8 +37,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) co
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->shape() == other.shape()) {
-        return cuda_binary_op(other, cuda_ops::launch_tensor_subtract<T, U, std::common_type_t<T, U>>);
+    if (this->device == Device::GPU) {
+        if(this->shape() == other.shape()) {
+            return cuda_binary_op(other, cuda_ops::launch_tensor_subtract<T, U, std::common_type_t<T, U>>);
+        } else if(this->can_broadcast(other)) {
+            return cuda_broadcast_op(other, 1); // 1 = subtraction
+        }
     }
 #endif
 
@@ -51,8 +59,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) co
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->shape() == other.shape()) {
-        return cuda_binary_op(other, cuda_ops::launch_tensor_multiply<T, U, std::common_type_t<T, U>>);
+    if (this->device == Device::GPU) {
+        if(this->shape() == other.shape()) {
+            return cuda_binary_op(other, cuda_ops::launch_tensor_multiply<T, U, std::common_type_t<T, U>>);
+        } else if(this->can_broadcast(other)) {
+            return cuda_broadcast_op(other, 2); // 2 = multiplication
+        }
     }
 #endif
 
@@ -69,8 +81,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) co
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->shape() == other.shape()) {
-        return cuda_binary_op(other, cuda_ops::launch_tensor_divide<T, U, std::common_type_t<T, U>>);
+    if (this->device == Device::GPU) {
+        if(this->shape() == other.shape()) {
+            return cuda_binary_op(other, cuda_ops::launch_tensor_divide<T, U, std::common_type_t<T, U>>);
+        } else if(this->can_broadcast(other)) {
+            return cuda_broadcast_op(other, 3); // 3 = division
+        }
     }
 #endif
 

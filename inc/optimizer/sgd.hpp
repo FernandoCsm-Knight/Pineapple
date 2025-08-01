@@ -13,6 +13,7 @@ template <Numeric T> class SGD: public Optimizer<T> {
         SGD(T learning_rate, T momentum = 0.9f);
         ~SGD();
 
+        void to(Device target_device) override;
         Optimizer<T>* copy() const override;
 
         void step(Tensor<T>& weights, const Tensor<T>& grad_weights, Tensor<T>& bias, const Tensor<T>& grad_bias) override;

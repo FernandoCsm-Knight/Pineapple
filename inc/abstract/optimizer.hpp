@@ -11,6 +11,7 @@ template <Numeric T> class Optimizer {
         Optimizer(T lr): learning_rate(lr) {}
         virtual ~Optimizer() = default;
 
+        virtual void to(Device target_device) = 0;
         virtual Optimizer<T>* copy() const = 0;
 
         virtual void step(

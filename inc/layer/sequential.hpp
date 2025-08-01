@@ -15,6 +15,7 @@ template <Numeric T> class Sequential: public Layer<T> {
         Sequential(std::initializer_list<Layer<T>*> layer_list);
         ~Sequential();
 
+        void to(Device target_device) override;
         Tensor<T> forward(const Tensor<T>& input) override;
         Tensor<T> backward(const Tensor<T>& grad_output) override;
 

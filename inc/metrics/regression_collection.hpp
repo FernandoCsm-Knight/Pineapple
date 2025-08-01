@@ -16,6 +16,7 @@ template <Numeric T> class RegressionCollection: public MetricCollection<T> {
 
         ~RegressionCollection() override = default;
 
+        void to(Device target_device) override;
         void update(const Tensor<T>& predictions, const Tensor<T>& targets) override;
         float compute(const std::string& metric, int class_idx = -1) const override;
         

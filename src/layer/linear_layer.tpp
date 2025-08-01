@@ -24,6 +24,16 @@ LinearLayer<T>::LinearLayer(int in_features, int out_features)
 }
 
 template <Numeric T>
+void LinearLayer<T>::to(Device target_device) {
+    weights.to(target_device);
+    bias.to(target_device);
+    
+    last_input.to(target_device);
+    
+    if(this->optimizer) this->optimizer->to(target_device);
+}
+
+template <Numeric T>
 Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
     if (input.shape(input.ndim() - 1) != in_features) {
         throw std::invalid_argument("Input features don't match layer's in_features");

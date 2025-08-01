@@ -21,6 +21,7 @@ template <Numeric T> class ConfusionMatrixCollection: public MetricCollection<T>
 
         ~ConfusionMatrixCollection() override;
 
+        void to(Device target_device) override;
         void init_matrix(int num_classes);
 
         inline int classes() const;

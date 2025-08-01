@@ -7,6 +7,9 @@ template <Numeric T>
 GD<T>::GD(T learning_rate): Optimizer<T>(learning_rate) {}
 
 template <Numeric T>
+void GD<T>::to(Device target_device) {}
+
+template <Numeric T>
 Optimizer<T>* GD<T>::copy() const {
     return new GD<T>(this->learning_rate);
 }

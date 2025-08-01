@@ -4,6 +4,11 @@
 #include "../../inc/abstract/activation.hpp"
 
 template <Numeric T>
+void Activation<T>::to(Device target_device) {
+    last_output.to(target_device);
+}
+
+template <Numeric T>
 Tensor<T> Activation<T>::forward(const Tensor<T>& input) {
     this->last_output = apply(input);
     return this->last_output;

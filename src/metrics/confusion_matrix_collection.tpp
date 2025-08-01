@@ -128,6 +128,13 @@ ConfusionMatrixCollection<T>::~ConfusionMatrixCollection() {
 // Public methods
 
 template <Numeric T>
+void ConfusionMatrixCollection<T>::to(Device target_device) {
+    for(auto& pair : this->metrics) {
+        pair.second->to(target_device);
+    }
+}
+
+template <Numeric T>
 void ConfusionMatrixCollection<T>::init_matrix(int num_classes) {
     if(cm != nullptr) {
         for(int i = 0; i < this->num_classes; ++i) {

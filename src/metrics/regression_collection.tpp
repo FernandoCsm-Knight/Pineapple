@@ -14,6 +14,16 @@ RegressionCollection<T>::RegressionCollection(std::initializer_list<Metric<T>*> 
 }
 
 template <Numeric T>
+void RegressionCollection<T>::to(Device target_device) {
+    last_predictions.to(target_device);
+    last_targets.to(target_device);
+    
+    for(auto& pair : this->metrics) {
+        pair.second->to(target_device);
+    }
+}
+
+template <Numeric T>
 void RegressionCollection<T>::update(const Tensor<T>& predictions, const Tensor<T>& targets) {
     if(predictions.length() != targets.length()) {
         throw std::invalid_argument("Predictions and targets must have the same length");
