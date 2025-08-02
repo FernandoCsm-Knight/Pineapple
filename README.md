@@ -91,7 +91,7 @@ To learn Pineapple, you can refer to the provided video examples for guidance on
 1. [Installation and Setup](https://youtu.be/jr9qMVzLQS8)
 2. [Introduction to Tensor](https://youtu.be/IvzQeD2IFkE)
 3. [Introduction to Pineapple Classification](https://youtu.be/7Mpw1jOL9CQ)
-4. [Introduction to Pineapple Regression]()
+4. [Introduction to Pineapple Regression](https://youtu.be/zxxuQuZ_C_k)
 
 ## References
 
