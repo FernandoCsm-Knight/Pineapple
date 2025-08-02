@@ -57,7 +57,7 @@ template <Numeric T>
 void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs, int batch_size, float validation) {
     Partition<T> partition(X, y, true);
 
-    auto [train_data, train_target, validation_data, validation_target] = partition.stratified_split(y, validation);
+    auto [train_data, train_target, validation_data, validation_target] = partition.split(validation);
 
     BatchLoader<T> train_loader(train_data, train_target, batch_size, true);
     BatchLoader<T> validation_loader(validation_data, validation_target, batch_size, false);
