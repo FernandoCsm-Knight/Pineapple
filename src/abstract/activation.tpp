@@ -5,6 +5,7 @@
 
 template <Numeric T>
 void Activation<T>::to(Device target_device) {
+    this->current_device = target_device;
     last_output.to(target_device);
 }
 

@@ -5,8 +5,8 @@ int main() {
     const int NUM_CLASSES = 2;
     const int NUM_FEATURES = 2;
     const float LEARNING_RATE = 0.001f;
-    const int EPOCHS = 1000;
-    const int BATCH_SIZE = 32;
+    const int EPOCHS = 100;
+    const int BATCH_SIZE = 128;
 
     omp_set_num_threads(16);
 
@@ -24,11 +24,6 @@ int main() {
     
     LinearLayer<float>* layer3 = new LinearLayer<float>(8, NUM_CLASSES);
     Softmax<float>* softmax = new Softmax<float>();
-    
-    ConfusionMatrixCollection<float>* cm = new ConfusionMatrixCollection<float>(
-        NUM_CLASSES,
-        { new Accuracy<float>() }
-    );
 
     NeuralNetwork<float> model(
         new Sequential<float>({
@@ -37,20 +32,15 @@ int main() {
             layer3, softmax
         }),
         new CrossEntropyLoss<float>(),
-        new GD<float>(LEARNING_RATE), 
-        cm
+        new GD<float>(LEARNING_RATE)
     );
 
-    model.to(Device::GPU);
+    if(pineapple::is_cuda_available()) {
+        model.to(Device::GPU);
+    }
 
     std::cout << "Iniciando treinamento..." << std::endl;
     model.train(X_train, y_train, EPOCHS, BATCH_SIZE);
-    
-    model.evaluate(X_train, y_train);
-    std::cout << "Acurácia de treinamento: " << cm->compute("accuracy") * 100 << "%" << std::endl;
-    
-    model.evaluate(X_test, y_test);
-    std::cout << "Acurácia de teste: " <<  cm->compute("accuracy") * 100 << "%" << std::endl;
 
     return 0;
 }

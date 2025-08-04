@@ -5,6 +5,10 @@
 
 #include <random>
 
+#ifdef __NVCC__
+#include "../../inc/device/cuda_macros.hpp"
+#endif
+
 template <Numeric T>
 LinearLayer<T>::LinearLayer(int in_features, int out_features)
     : in_features(in_features), out_features(out_features) {
@@ -25,6 +29,7 @@ LinearLayer<T>::LinearLayer(int in_features, int out_features)
 
 template <Numeric T>
 void LinearLayer<T>::to(Device target_device) {
+    this->current_device = target_device;
     weights.to(target_device);
     bias.to(target_device);
     
@@ -40,7 +45,16 @@ Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input) {
     }
     
     this->last_input = input;
-    return input.dot(weights) + bias;
+    Tensor<T> result = input.dot(weights) + bias;
+    
+    // Sync only at the end of forward pass if on GPU
+    #ifdef __NVCC__
+    if (result.is_cuda()) {
+        CUDA_CHECK(cudaDeviceSynchronize());
+    }
+    #endif
+    
+    return result;
 }
 
 template <Numeric T>
@@ -58,6 +72,13 @@ Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_weights) {
         bias,
         grad_weights.sum(0, true) / batch_size
     );
+
+    // Sync only at the end of backward pass if on GPU
+    #ifdef __NVCC__
+    if (previous_grad.is_cuda()) {
+        CUDA_CHECK(cudaDeviceSynchronize());
+    }
+    #endif
 
     return previous_grad;
 }

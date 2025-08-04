@@ -10,12 +10,12 @@
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) const {
-    if(this->device != other.device) {
+    if(this->device() != other.device()) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
 #ifdef __NVCC__
-    if(this->device == Device::GPU) {
+    if(this->is_cuda()) {
         if(this->shape() == other.shape()) {
             return cuda_binary_op(other, cuda_ops::launch_tensor_add<T, U, std::common_type_t<T, U>>);
         } else if(this->can_broadcast(other)) {
@@ -32,12 +32,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) const {
-    if (this->device != other.device) {
+    if (this->device() != other.device()) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         if(this->shape() == other.shape()) {
             return cuda_binary_op(other, cuda_ops::launch_tensor_subtract<T, U, std::common_type_t<T, U>>);
         } else if(this->can_broadcast(other)) {
@@ -54,12 +54,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) const {
-    if (this->device != other.device) {
+    if (this->device() != other.device()) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         if(this->shape() == other.shape()) {
             return cuda_binary_op(other, cuda_ops::launch_tensor_multiply<T, U, std::common_type_t<T, U>>);
         } else if(this->can_broadcast(other)) {
@@ -76,12 +76,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const Tensor<U>& other) co
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const Tensor<U>& other) const {
-    if (this->device != other.device) {
+    if (this->device() != other.device()) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         if(this->shape() == other.shape()) {
             return cuda_binary_op(other, cuda_ops::launch_tensor_divide<T, U, std::common_type_t<T, U>>);
         } else if(this->can_broadcast(other)) {
@@ -99,7 +99,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator+(const U& scalar) const {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_add<T, U, std::common_type_t<T, U>>);
     }
 #endif
@@ -113,7 +113,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator-(const U& scalar) const {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_subtract<T, U, std::common_type_t<T, U>>);
     }
 #endif
@@ -127,7 +127,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator*(const U& scalar) const {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_multiply<T, U, std::common_type_t<T, U>>);
     }
 #endif
@@ -141,7 +141,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::operator/(const U& scalar) const {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_scalar_op(scalar, cuda_ops::launch_tensor_scalar_divide<T, U, std::common_type_t<T, U>>);
     }
 #endif
@@ -155,7 +155,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator+=(const Tensor<U>& other) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
+    if (this->is_cuda() && this->device() == other.device() && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_add<T, U>);
     }
 #endif
@@ -169,7 +169,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator-=(const Tensor<U>& other) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
+    if (this->is_cuda() && this->device() == other.device() && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_subtract<T, U>);
     }
 #endif
@@ -183,7 +183,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator*=(const Tensor<U>& other) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
+    if (this->is_cuda() && this->device() == other.device() && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_multiply<T, U>);
     }
 #endif
@@ -197,7 +197,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator/=(const Tensor<U>& other) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU && this->device == other.device && this->shape() == other.shape()) {
+    if (this->is_cuda() && this->device() == other.device() && this->shape() == other.shape()) {
         return cuda_inplace_tensor_op(other, cuda_ops::launch_tensor_inplace_divide<T, U>);
     }
 #endif
@@ -211,7 +211,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator+=(const U& scalar) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_add<T, U>);
     }
 #endif
@@ -225,7 +225,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator-=(const U& scalar) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_subtract<T, U>);
     }
 #endif
@@ -239,7 +239,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator*=(const U& scalar) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_multiply<T, U>);
     }
 #endif
@@ -253,7 +253,7 @@ template <Numeric T>
 template <Numeric U>
 Tensor<T>& Tensor<T>::operator/=(const U& scalar) {
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         return cuda_inplace_scalar_op(scalar, cuda_ops::launch_tensor_inplace_scalar_divide<T, U>);
     }
 #endif

@@ -67,7 +67,7 @@ public:
             unsigned long seed = static_cast<unsigned long>(time(NULL));
             setup_curand_kernel_dropout<<<grid, BLOCK_SIZE>>>(d_state, seed, size);
             CUDA_CHECK(cudaGetLastError());
-            CUDA_CHECK(cudaDeviceSynchronize());
+    
             
             initialized = true;
         }
@@ -89,7 +89,6 @@ void launch_dropout_mask(bool* mask, T dropout_rate, size_t size) {
     dropout_mask_kernel_impl<<<grid, BLOCK_SIZE>>>(global_dropout_state<T>.get_state(), mask, dropout_prob, size);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -98,7 +97,6 @@ void launch_dropout_forward(const T* input, const bool* mask, T* output, T scale
     
     dropout_forward_kernel_impl<<<grid, BLOCK_SIZE>>>(input, mask, output, scale, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -107,7 +105,6 @@ void launch_dropout_backward(const T* grad_output, const bool* mask, T* grad_inp
     
     dropout_backward_kernel_impl<<<grid, BLOCK_SIZE>>>(grad_output, mask, grad_input, scale, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 // Explicit template instantiations

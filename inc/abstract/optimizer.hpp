@@ -1,9 +1,10 @@
 #ifndef OPTIMIZER_HPP
 #define OPTIMIZER_HPP
 
+#include "support_device.hpp"
 #include "../tensor/tensor.hpp"
 
-template <Numeric T> class Optimizer {
+template <Numeric T> class Optimizer: public SupportDevice {
     protected:
         T learning_rate;
 
@@ -11,7 +12,6 @@ template <Numeric T> class Optimizer {
         Optimizer(T lr): learning_rate(lr) {}
         virtual ~Optimizer() = default;
 
-        virtual void to(Device target_device) = 0;
         virtual Optimizer<T>* copy() const = 0;
 
         virtual void step(

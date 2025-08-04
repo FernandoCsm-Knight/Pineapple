@@ -7,9 +7,6 @@ template <Numeric T>
 FlattenLayer<T>::FlattenLayer() : Layer<T>() {}
 
 template <Numeric T>
-void FlattenLayer<T>::to(Device target_device) {}
-
-template <Numeric T>
 Tensor<T> FlattenLayer<T>::forward(const Tensor<T>& input) {
     input_shape = input.shape();
     return input.flatten();

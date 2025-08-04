@@ -7,6 +7,8 @@
 #include "../abstract/layer.hpp"
 #include "../abstract/optimizer.hpp"
 
+#include "../device/cuda_macros.hpp"
+
 template <Numeric T> class LinearLayer: public Layer<T> {
     private:
         int in_features;

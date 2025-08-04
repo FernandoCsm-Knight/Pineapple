@@ -16,7 +16,7 @@ Softmax<T>::Softmax(): Activation<T>() {
 template <Numeric T> 
 Tensor<T> Softmax<T>::apply(const Tensor<T>& input) const  {
     Tensor<T> result(input.shape());
-    result.to(input.get_device());
+    result.to(input.device());
     
     #ifdef __NVCC__
     if(input.is_cuda()) {
@@ -52,7 +52,7 @@ Tensor<T> Softmax<T>::apply(const Tensor<T>& input) const  {
 template <Numeric T>
 Tensor<T> Softmax<T>::derivative(const Tensor<T>& input) const {
     Tensor<T> result(input.shape());
-    result.to(input.get_device());
+    result.to(input.device());
 
     #ifdef __NVCC__
     if(input.is_cuda()) {

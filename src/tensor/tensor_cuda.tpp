@@ -11,7 +11,7 @@
 
 template <Numeric T>
 void Tensor<T>::to(Device target_device) {
-    if(device != target_device) {
+    if(device() != target_device) {
         #ifdef __NVCC__
             if(target_device == Device::GPU) {
                 T* gpu_data = cuda_ops::cuda_malloc<T>(this->length());
@@ -20,7 +20,7 @@ void Tensor<T>::to(Device target_device) {
                 if(owns_data) delete[] data;
                 
                 data = gpu_data;
-                device = Device::GPU;
+                this->current_device = Device::GPU;
                 owns_data = true;
             } else {
                 T* cpu_data = new T[this->length()];
@@ -29,7 +29,7 @@ void Tensor<T>::to(Device target_device) {
                 if(owns_data) cuda_ops::cuda_free(data);
                 
                 data = cpu_data;
-                device = Device::CPU;
+                this->current_device = Device::CPU;
                 owns_data = true;
             }
         #else
@@ -38,16 +38,6 @@ void Tensor<T>::to(Device target_device) {
             }
         #endif
     }
-}
-
-template <Numeric T>
-Device Tensor<T>::get_device() const {
-    return device;
-}
-
-template <Numeric T>
-bool Tensor<T>::is_cuda() const {
-    return device == Device::GPU;
 }
 
 #endif

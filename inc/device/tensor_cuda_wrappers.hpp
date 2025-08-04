@@ -87,6 +87,13 @@ T launch_tensor_max(const T* data, size_t size);
 template<typename T>
 T launch_tensor_sum(const T* data, size_t size);
 
+// Soma ao longo de um axis específico
+template<typename T>
+void launch_tensor_sum_axis(const T* data, T* result, 
+                           const int* shape, const int* strides,
+                           const int* result_strides, int axis,
+                           int ndim, size_t result_size);
+
 template<typename T>
 T launch_tensor_norm(const T* data, size_t size);
 

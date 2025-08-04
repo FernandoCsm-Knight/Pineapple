@@ -20,5 +20,7 @@ inline dim3 calculate_grid_block(size_t size, int block_size = BLOCK_SIZE) {
     const int grid_size = (size + block_size - 1) / block_size;
     return dim3(grid_size, 1, 1);
 }
+
+extern __shared__ unsigned char shared_data[];
     
 #endif 

@@ -25,6 +25,7 @@ Sequential<T>::~Sequential() {
 
 template <Numeric T>
 void Sequential<T>::to(Device target_device) {
+    this->current_device = target_device;
     for(int i = 0; i < size; ++i) {
         layers[i]->to(target_device);
     }

@@ -13,7 +13,6 @@ void launch_relu_apply(const T* input, T* output, size_t size) {
     relu_apply_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -23,7 +22,6 @@ void launch_relu_derivative(const T* input, T* output, size_t size) {
     relu_derivative_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -33,7 +31,6 @@ void launch_sigmoid_apply(const T* input, T* output, size_t size) {
     sigmoid_apply_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -43,7 +40,6 @@ void launch_sigmoid_derivative(const T* input, T* output, size_t size) {
     sigmoid_derivative_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -53,7 +49,6 @@ void launch_tanh_apply(const T* input, T* output, size_t size) {
     tanh_apply_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -63,7 +58,6 @@ void launch_tanh_derivative(const T* input, T* output, size_t size) {
     tanh_derivative_kernel<<<grid, BLOCK_SIZE>>>(input, output, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -73,7 +67,6 @@ void launch_elu_apply(const T* input, T* output, T alpha, size_t size) {
     elu_apply_kernel<<<grid, BLOCK_SIZE>>>(input, output, alpha, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -83,7 +76,6 @@ void launch_elu_derivative(const T* input, T* output, T alpha, size_t size) {
     elu_derivative_kernel<<<grid, BLOCK_SIZE>>>(input, output, alpha, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -93,7 +85,6 @@ void launch_leaky_relu_apply(const T* input, T* output, T alpha, size_t size) {
     leaky_relu_apply_kernel<<<grid, BLOCK_SIZE>>>(input, output, alpha, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -103,7 +94,6 @@ void launch_leaky_relu_derivative(const T* input, T* output, T alpha, size_t siz
     leaky_relu_derivative_kernel<<<grid, BLOCK_SIZE>>>(input, output, alpha, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -114,7 +104,6 @@ void launch_softmax_apply(const T* input, T* output, int batch_size, int num_cla
     softmax_apply_kernel<<<grid, block>>>(input, output, batch_size, num_classes, size);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void launch_relu_apply<float>(const float*, float*, size_t);

@@ -6,7 +6,7 @@
 #include <functional>
 #include <type_traits>
 
-extern __shared__ unsigned char shared_data[];
+#include "../../inc/device/cuda_macros.hpp"
 
 template <typename T, typename U, typename R, typename F>
 __global__ void tensor_elementwise_kernel(const T* a, const U* b, R* result, size_t size, F operation) {
@@ -146,6 +146,51 @@ __global__ void tensor_sum_kernel(const T* data, T* result, size_t size) {
     }
     
     if(tid == 0) result[blockIdx.x] = sdata[0];
+}
+
+// Kernel para soma ao longo de um axis específico
+template<typename T>
+__global__ void tensor_sum_axis_kernel(const T* data, T* result, 
+                                      const int* shape, const int* strides,
+                                      const int* result_strides, int axis,
+                                      int ndim, size_t result_size) {
+    const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(idx < result_size) {
+        // Converte índice linear para coordenadas multidimensionais do resultado
+        size_t temp_idx = idx;
+        int result_coords[8]; // Máximo 8 dimensões
+        
+        for(int i = 0; i < ndim; ++i) {
+            if(i == axis) continue; // Pula a dimensão do axis
+            int result_dim = (i < axis) ? i : i - 1;
+            result_coords[result_dim] = temp_idx / result_strides[result_dim];
+            temp_idx %= result_strides[result_dim];
+        }
+        
+        // Calcula a soma ao longo do axis
+        T sum = T(0);
+        int axis_size = shape[axis];
+        
+        for(int a = 0; a < axis_size; ++a) {
+            // Reconstrói as coordenadas completas incluindo o axis
+            size_t data_idx = 0;
+            int coord_idx = 0;
+            
+            for(int d = 0; d < ndim; ++d) {
+                if(d == axis) {
+                    data_idx += a * strides[d];
+                } else {
+                    data_idx += result_coords[coord_idx] * strides[d];
+                    coord_idx++;
+                }
+            }
+            
+            sum += data[data_idx];
+        }
+        
+        result[idx] = sum;
+    }
 }
 
 // Kernels para operações elemento por elemento

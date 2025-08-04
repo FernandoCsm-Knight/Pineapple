@@ -16,7 +16,8 @@ Dropout<T>::Dropout(T rate): dropout_fraction(rate) {
 
 template <Numeric T>
 void Dropout<T>::to(Device target_device) {
-    mask.to(target_device);    
+    this->current_device = target_device;
+    mask.to(target_device);
 }
 
 template <Numeric T>
@@ -25,18 +26,15 @@ Tensor<T> Dropout<T>::forward(const Tensor<T>& input) {
 
     if(this->is_in_train_mode() && dropout_fraction > 0.0) {
         mask = Tensor<bool>(input.shape());
-        mask.to(input.get_device());
+        mask.to(input.device());
         
         Tensor<T> output(input.shape());
-        output.to(input.get_device());
+        output.to(input.device());
         const T scale = static_cast<T>(1.0) / (static_cast<T>(1.0) - dropout_fraction);
         
         #ifdef __NVCC__
         if(input.is_cuda()) {
-            // Gera máscara usando CUDA
             cuda_dropout_ops::launch_dropout_mask(mask.data_ptr(), dropout_fraction, mask.length());
-            
-            // Aplica dropout usando CUDA
             cuda_dropout_ops::launch_dropout_forward(input.data_ptr(), mask.data_ptr(), output.data_ptr(), scale, input.length());
         } else {
         #endif
@@ -70,7 +68,7 @@ Tensor<T> Dropout<T>::backward(const Tensor<T>& grad_output) {
 
     if(this->is_in_train_mode() && dropout_fraction > 0.0) {
         Tensor<T> grad_input(grad_output.shape());
-        grad_input.to(grad_output.get_device());
+        grad_input.to(grad_output.device());
         const T scale = static_cast<T>(1.0) / (static_cast<T>(1.0) - dropout_fraction);
         
         #ifdef __NVCC__

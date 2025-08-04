@@ -9,20 +9,23 @@
 
 template <Numeric T>
 T Tensor<T>::norm() const {
-#ifdef __NVCC__
-    if (this->device == Device::GPU) {
-        return cuda_ops::launch_tensor_norm(this->data, this->length());
-    }
-#endif
-    
     T sum = 0;
 
-    #pragma omp parallel for reduction(+:sum)
-    for(size_t i = 0; i < this->length(); ++i) {
-        sum += this->data[i] * this->data[i];
+#ifdef __NVCC__
+    if (this->is_cuda()) {
+        sum = cuda_ops::launch_tensor_norm(this->data, this->length());
+    } else 
+#endif
+    {
+        #pragma omp parallel for reduction(+:sum)
+        for(size_t i = 0; i < this->length(); ++i) {
+            sum += this->data[i] * this->data[i];
+        }
+
+        sum = std::sqrt(sum);
     }
 
-    return std::sqrt(sum);
+    return sum;
 }
 
 template <Numeric T>
@@ -45,10 +48,10 @@ Tensor<T> Tensor<T>::dilate(int size, std::vector<int> axes) const {
     }
     
     Tensor<T> result(new_shape, T(0));
-    result.device = this->device;
+    result.current_device = this->device();
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if(this->is_cuda()) {
         if (result.owns_data) {
             delete[] result.data;
         }
@@ -97,35 +100,34 @@ Tensor<T> Tensor<T>::dilate(int size, std::vector<int> axes) const {
         cuda_ops::cuda_free(d_input_strides);
         cuda_ops::cuda_free(d_output_strides);
         cuda_ops::cuda_free(d_axes);
-        
-        return result;
-    }
+    } else
 #endif
-    
-    std::vector<int> input_idx(this->ndim(), 0);
-    std::vector<int> output_idx(this->ndim(), 0);
-    
-    for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
-        size_t remaining = flat_idx;
-        for(int i = 0; i < this->ndim(); ++i) {
-            input_idx[i] = remaining / this->stride[i];
-            remaining %= this->stride[i];
-        }
+    {           
+        std::vector<int> input_idx(this->ndim(), 0);
+        std::vector<int> output_idx(this->ndim(), 0);
         
-        for(int i = 0; i < this->ndim(); ++i) {
-            if (std::find(axes.begin(), axes.end(), i) != axes.end()) {
-                output_idx[i] = input_idx[i] * (size + 1);
-            } else {
-                output_idx[i] = input_idx[i];
+        for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
+            size_t remaining = flat_idx;
+            for(int i = 0; i < this->ndim(); ++i) {
+                input_idx[i] = remaining / this->stride[i];
+                remaining %= this->stride[i];
             }
+            
+            for(int i = 0; i < this->ndim(); ++i) {
+                if (std::find(axes.begin(), axes.end(), i) != axes.end()) {
+                    output_idx[i] = input_idx[i] * (size + 1);
+                } else {
+                    output_idx[i] = input_idx[i];
+                }
+            }
+            
+            size_t result_idx = 0;
+            for(int i = 0; i < this->ndim(); ++i) {
+                result_idx += output_idx[i] * result.stride[i];
+            }
+            
+            result.data[result_idx] = this->data[flat_idx];
         }
-        
-        size_t result_idx = 0;
-        for(int i = 0; i < this->ndim(); ++i) {
-            result_idx += output_idx[i] * result.stride[i];
-        }
-        
-        result.data[result_idx] = this->data[flat_idx];
     }
     
     return result;
@@ -151,10 +153,10 @@ Tensor<T> Tensor<T>::pad(int size, std::vector<int> axes) const {
     }
     
     Tensor<T> result(new_shape, T(0));
-    result.device = this->device;
+    result.current_device = this->device();
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if (this->is_cuda()) {
         if (result.owns_data) {
             delete[] result.data;
         }
@@ -203,37 +205,36 @@ Tensor<T> Tensor<T>::pad(int size, std::vector<int> axes) const {
         cuda_ops::cuda_free(d_input_strides);
         cuda_ops::cuda_free(d_output_strides);
         cuda_ops::cuda_free(d_axes);
-        
-        return result;
-    }
+    } else
 #endif
-    
-    std::vector<int> input_idx(this->ndim(), 0);
-    std::vector<int> output_idx(this->ndim(), 0);
-    
-    for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
-        size_t remaining = flat_idx;
-        for(int i = 0; i < this->ndim(); ++i) {
-            input_idx[i] = remaining / this->stride[i];
-            remaining %= this->stride[i];
-        }
+    {
+        std::vector<int> input_idx(this->ndim(), 0);
+        std::vector<int> output_idx(this->ndim(), 0);
         
-        for(int i = 0; i < this->ndim(); ++i) {
-            if(std::find(axes.begin(), axes.end(), i) != axes.end()) {
-                output_idx[i] = input_idx[i] + size;
-            } else {
-                output_idx[i] = input_idx[i];
+        for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
+            size_t remaining = flat_idx;
+            for(int i = 0; i < this->ndim(); ++i) {
+                input_idx[i] = remaining / this->stride[i];
+                remaining %= this->stride[i];
             }
+            
+            for(int i = 0; i < this->ndim(); ++i) {
+                if(std::find(axes.begin(), axes.end(), i) != axes.end()) {
+                    output_idx[i] = input_idx[i] + size;
+                } else {
+                    output_idx[i] = input_idx[i];
+                }
+            }
+            
+            size_t result_idx = 0;
+            for(int i = 0; i < this->ndim(); ++i) {
+                result_idx += output_idx[i] * result.stride[i];
+            }
+            
+            result.data[result_idx] = this->data[flat_idx];
         }
-        
-        size_t result_idx = 0;
-        for(int i = 0; i < this->ndim(); ++i) {
-            result_idx += output_idx[i] * result.stride[i];
-        }
-        
-        result.data[result_idx] = this->data[flat_idx];
     }
-    
+
     return result;
 }
 
@@ -252,10 +253,10 @@ Tensor<T> Tensor<T>::flip(std::vector<int> axes) const {
     }
     
     Tensor<T> result(this->shape());
-    result.device = this->device;
+    result.current_device = this->device();
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
+    if(this->is_cuda()) {
         if (result.owns_data) {
             delete[] result.data;
         }
@@ -295,37 +296,36 @@ Tensor<T> Tensor<T>::flip(std::vector<int> axes) const {
         cuda_ops::cuda_free(d_axes);
         cuda_ops::cuda_free(d_strides);
         cuda_ops::cuda_free(d_result_strides);
-        
-        return result;
-    }
+    } else
 #endif
-    
-    std::vector<int> idx_input(this->ndim(), 0);
-    std::vector<int> idx_output(this->ndim(), 0);
-    
-    for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
-        size_t remaining = flat_idx;
-        for(int i = 0; i < this->ndim(); ++i) {
-            idx_input[i] = remaining / this->stride[i];
-            remaining %= this->stride[i];
+    {        
+        std::vector<int> idx_input(this->ndim(), 0);
+        std::vector<int> idx_output(this->ndim(), 0);
+        
+        for(size_t flat_idx = 0; flat_idx < this->length(); ++flat_idx) {
+            size_t remaining = flat_idx;
+            for(int i = 0; i < this->ndim(); ++i) {
+                idx_input[i] = remaining / this->stride[i];
+                remaining %= this->stride[i];
+            }
+            
+            idx_output = idx_input;
+            
+            for(int axis : axes) {
+                idx_output[axis] = this->shape(axis) - 1 - idx_input[axis];
+            }
+            
+            size_t linear_input = 0;
+            size_t linear_output = 0;
+            for(int i = 0; i < this->ndim(); ++i) {
+                linear_input += idx_input[i] * this->stride[i];
+                linear_output += idx_output[i] * result.stride[i];
+            }
+            
+            result.data[linear_output] = this->data[linear_input];
         }
-        
-        idx_output = idx_input;
-        
-        for(int axis : axes) {
-            idx_output[axis] = this->shape(axis) - 1 - idx_input[axis];
-        }
-        
-        size_t linear_input = 0;
-        size_t linear_output = 0;
-        for(int i = 0; i < this->ndim(); ++i) {
-            linear_input += idx_input[i] * this->stride[i];
-            linear_output += idx_output[i] * result.stride[i];
-        }
-        
-        result.data[linear_output] = this->data[linear_input];
     }
-    
+
     return result;
 }
 
@@ -455,7 +455,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::convolve(const Tensor<U>& kernel, in
 template <Numeric T>
 template <Numeric U>
 Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
-    if (this->device != other.device) {
+    if (this->device() != other.device()) {
         throw std::invalid_argument("Tensors must be on the same device for operations");
     }
     
@@ -491,13 +491,12 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
     }
     
     Tensor<R> result(result_shape);
-    result.device = this->device;
+    result.current_device = this->device();
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
-        if (result.owns_data) {
-            delete[] result.data;
-        }
+    if (this->is_cuda()) {
+        // Optimize memory allocation - allocate directly for GPU
+        result.current_device = Device::GPU;
         result.data = cuda_ops::cuda_malloc<R>(result.length());
         result.owns_data = true;
         
@@ -509,34 +508,34 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::dot(const Tensor<U>& other) const {
                                             result_shape.is_scalar() ? 1 : (result_shape.ndim() == 1 ? result_shape[0] : result_shape[0]),
                                             result_shape.is_scalar() ? 1 : (result_shape.ndim() == 1 ? 1 : result_shape[1]),
                                             a_is_vector, b_is_vector);
-        return result;
-    }
+    } else
 #endif
-    
-    #pragma omp parallel for collapse(2)
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < p; ++j) {
-            R sum = 0;
-            
-            for (int k = 0; k < n; ++k) {
-                int idx1 = (this->ndim() == 1) ? k : i * this->stride[0] + k * this->stride[1];
-                int idx2 = (other.ndim() == 1) ? k : k * other.stride[0] + j * other.stride[1];
+    {
+        #pragma omp parallel for collapse(2)
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < p; ++j) {
+                R sum = 0;
                 
-                sum += static_cast<R>(this->data[idx1]) * static_cast<R>(other.data[idx2]);
-            }
-            
-            if (this->ndim() == 1 && other.ndim() == 2) {
-                // Vetor x Matrix: (n,) x (n, p) = (p,)
-                result.data[j] = sum;
-            } else if (this->ndim() == 2 && other.ndim() == 1) {
-                // Matrix x Vetor: (m, n) x (n,) = (m,)
-                result.data[i] = sum;
-            } else {
-                // Matrix x Matrix: (m, n) x (n, p) = (m, p)
-                result.data[i * result.stride[0] + j * result.stride[1]] = sum;
+                for (int k = 0; k < n; ++k) {
+                    int idx1 = (this->ndim() == 1) ? k : i * this->stride[0] + k * this->stride[1];
+                    int idx2 = (other.ndim() == 1) ? k : k * other.stride[0] + j * other.stride[1];
+                    
+                    sum += static_cast<R>(this->data[idx1]) * static_cast<R>(other.data[idx2]);
+                }
+                
+                if (this->ndim() == 1 && other.ndim() == 2) {
+                    // Vetor x Matrix: (n,) x (n, p) = (p,)
+                    result.data[j] = sum;
+                } else if (this->ndim() == 2 && other.ndim() == 1) {
+                    // Matrix x Vetor: (m, n) x (n,) = (m,)
+                    result.data[i] = sum;
+                } else {
+                    // Matrix x Matrix: (m, n) x (n, p) = (m, p)
+                    result.data[i * result.stride[0] + j * result.stride[1]] = sum;
+                }
             }
         }
-    }
+    }    
     
     return result;
 }
@@ -548,25 +547,24 @@ Tensor<T> Tensor<T>::transpose() const {
     }
 
     Tensor<T> result(this->shape(1), this->shape(0));
-    result.device = this->device;
+    result.current_device = this->device();
 
 #ifdef __NVCC__
-    if (this->device == Device::GPU) {
-        if (result.owns_data) {
-            delete[] result.data;
-        }
+    if (this->is_cuda()) {
+        // Optimize memory allocation for GPU transpose
+        result.current_device = Device::GPU;
         result.data = cuda_ops::cuda_malloc<T>(result.length());
         result.owns_data = true;
         
         cuda_ops::launch_tensor_transpose(this->data, result.data, this->shape(0), this->shape(1));
-        return result;
-    }
+    } else
 #endif
-
-    #pragma omp parallel for collapse(2)
-    for(int i = 0; i < this->shape(0); ++i) {
-        for(int j = 0; j < this->shape(1); ++j) {
-            result.data[j * result.stride[0] + i] = this->data[i * this->stride[0] + j];
+    {
+        #pragma omp parallel for collapse(2)
+        for(int i = 0; i < this->shape(0); ++i) {
+            for(int j = 0; j < this->shape(1); ++j) {
+                result.data[j * result.stride[0] + i] = this->data[i * this->stride[0] + j];
+            }
         }
     }
 

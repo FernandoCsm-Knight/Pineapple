@@ -1,11 +1,12 @@
 #ifndef LAYER_HPP
 #define LAYER_HPP
 
+#include "support_device.hpp"
 #include "../types/device.hpp"
 #include "../types/numeric.hpp"
 #include "optimizer.hpp"
 
-template <Numeric T> class Layer {
+template <Numeric T> class Layer: public SupportDevice {
     protected:
         Optimizer<T>* optimizer = nullptr;
         bool training = true;
@@ -13,7 +14,6 @@ template <Numeric T> class Layer {
     public:
         virtual ~Layer();
 
-        virtual void to(Device target_device) = 0;
         virtual Tensor<T> forward(const Tensor<T>& input) = 0;
         virtual Tensor<T> backward(const Tensor<T>& grad_output) = 0;
 

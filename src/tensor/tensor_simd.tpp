@@ -164,7 +164,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_binary_op(
 ) const {
     using R = std::common_type_t<T, U>;
     Tensor<R> result(this->shape());
-    result.device = Device::GPU;
+    result.current_device = Device::GPU;
     
     if (result.owns_data) {
         delete[] result.data;
@@ -184,7 +184,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_scalar_op(
 ) const {
     using R = std::common_type_t<T, U>;
     Tensor<R> result(this->shape());
-    result.device = this->device;
+    result.current_device = this->device();
     
     if (result.owns_data) {
         delete[] result.data;
@@ -211,7 +211,7 @@ Tensor<std::common_type_t<T, U>> Tensor<T>::cuda_broadcast_op(
     }
     
     Tensor<R> result(result_shape);
-    result.device = Device::GPU;
+    result.current_device = Device::GPU;
     
     if (result.owns_data) {
         delete[] result.data;
@@ -316,7 +316,7 @@ Tensor<bool> Tensor<T>::cuda_comparison_op(
     void (*cuda_kernel)(const T*, const U*, bool*, size_t)
 ) const {
     Tensor<bool> result(this->shape());
-    result.device = Device::GPU;
+    result.current_device = Device::GPU;
     
     if (result.owns_data) {
         delete[] result.data;
@@ -335,7 +335,7 @@ Tensor<bool> Tensor<T>::cuda_scalar_comparison_op(
     void (*cuda_kernel)(const T*, U, bool*, size_t)
 ) const {
     Tensor<bool> result(this->shape());
-    result.device = this->device;
+    result.current_device = this->device();
     
     if (result.owns_data) {
         delete[] result.data;

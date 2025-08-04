@@ -10,7 +10,7 @@
 template <Numeric T>
 Tensor<T> Tanh<T>::apply(const Tensor<T>& input) const {
     Tensor<T> result(input.shape());
-    result.to(input.get_device());
+    result.to(input.device());
 
     #ifdef __NVCC__
     if(input.is_cuda()) {
@@ -30,7 +30,7 @@ Tensor<T> Tanh<T>::apply(const Tensor<T>& input) const {
 template <Numeric T>
 Tensor<T> Tanh<T>::derivative(const Tensor<T>& input) const {
     Tensor<T> result(input.shape());
-    result.to(input.get_device());
+    result.to(input.device());
 
     #ifdef __NVCC__
     if(input.is_cuda()) {

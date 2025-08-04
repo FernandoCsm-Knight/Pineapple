@@ -87,10 +87,10 @@ Tensor<T>::Tensor(const Shape& shape, const T& value): Shapeable(shape) {
 
 template <Numeric T>
 Tensor<T>::Tensor(const Tensor<T>& other): Shapeable(other) { 
-    device = other.device;
+    this->current_device = other.device();
 
 #ifdef __NVCC__
-    if (device == Device::GPU) {
+    if (this->is_cuda()) {
         data = cuda_ops::cuda_malloc<T>(this->length());
         cuda_ops::cuda_memcpy_device_to_device(data, other.data, this->length());
     } else
@@ -114,7 +114,7 @@ Tensor<T>::Tensor(Tensor<T>&& other) noexcept: Shapeable(std::move(other)) {
     data = other.data;
     stride = other.stride;
     owns_data = other.owns_data;
-    device = other.device;
+    this->current_device = other.device();
     other.stride = nullptr;
     other.data = nullptr;
 }
@@ -122,10 +122,10 @@ Tensor<T>::Tensor(Tensor<T>&& other) noexcept: Shapeable(std::move(other)) {
 template <Numeric T>
 template <Numeric U>
 Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) { 
-    device = other.device;
+    this->current_device = other.device();
 
 #ifdef __NVCC__
-    if (device == Device::GPU) {
+    if (this->is_cuda()) {
         data = cuda_ops::cuda_malloc<T>(this->length());
     } else
 #endif
@@ -140,7 +140,7 @@ Tensor<T>::Tensor(const Tensor<U>& other): Shapeable(other) {
     }
 
 #ifdef __NVCC__
-    if (device == Device::GPU) {
+    if (this->is_cuda()) {
         cuda_ops::launch_tensor_type_convert(other.data, data, this->length());
     } else
 #endif
@@ -158,7 +158,7 @@ template <Numeric T>
 Tensor<T>::~Tensor() {
     if(owns_data) {
 #ifdef __NVCC__
-        if (device == Device::GPU) {
+        if (this->is_cuda()) {
             cuda_ops::cuda_free(data);
         } else
 #endif
@@ -179,7 +179,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
     if(this != &other) {
         if(owns_data) {
 #ifdef __NVCC__
-            if (device == Device::GPU) {
+            if (this->is_cuda()) {
                 cuda_ops::cuda_free(this->data);
             } else
 #endif
@@ -189,10 +189,10 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
             delete[] stride;
     
             this->sh = other.shape();
-            device = other.device;
+            this->current_device = other.device();
 
 #ifdef __NVCC__
-            if (device == Device::GPU) {
+            if (this->is_cuda()) {
                 this->data = cuda_ops::cuda_malloc<T>(this->length());
             } else
 #endif
@@ -208,8 +208,8 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
 
         if(other.is_scalar()) {
 #ifdef __NVCC__
-            if (device == Device::GPU) {
-                if (other.device == Device::GPU) {
+            if (this->is_cuda()) {
+                if (other.is_cuda()) {
                     T scalar_value;
                     cuda_ops::cuda_memcpy_device_to_host(&scalar_value, other.data, 1);
                     cuda_ops::launch_tensor_fill(this->data, scalar_value, this->length());
@@ -221,7 +221,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
             {
                 T scalar_value;
 #ifdef __NVCC__
-                if (other.device == Device::GPU) {
+                if (other.is_cuda()) {
                     cuda_ops::cuda_memcpy_device_to_host(&scalar_value, other.data, 1);
                 } else
 #endif
@@ -236,11 +236,11 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<T>& other) {
             }
         } else {
 #ifdef __NVCC__
-            if (device == Device::GPU && other.device == Device::GPU) {
+            if (this->is_cuda() && other.is_cuda()) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
-            } else if (device == Device::GPU && other.device == Device::CPU) {
+            } else if (this->is_cuda() && !other.is_cuda()) {
                 cuda_ops::cuda_memcpy_host_to_device(this->data, other.data, this->length());
-            } else if (device == Device::CPU && other.device == Device::GPU) {
+            } else if (!this->is_cuda() && other.is_cuda()) {
                 cuda_ops::cuda_memcpy_device_to_host(this->data, other.data, this->length());
             } else
 #endif
@@ -265,11 +265,11 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
             }
             
 #ifdef __NVCC__
-            if (device == Device::GPU && other.device == Device::GPU) {
+            if (this->is_cuda() && other.is_cuda()) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
-            } else if (device == Device::GPU && other.device == Device::CPU) {
+            } else if (this->is_cuda() && !other.is_cuda()) {
                 cuda_ops::cuda_memcpy_host_to_device(this->data, other.data, this->length());
-            } else if (device == Device::CPU && other.device == Device::GPU) {
+            } else if (!this->is_cuda() && other.is_cuda()) {
                 cuda_ops::cuda_memcpy_device_to_host(this->data, other.data, this->length());
             } else
 #endif
@@ -281,7 +281,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
             }
         } else {            
 #ifdef __NVCC__
-            if (device == Device::GPU) {
+            if (this->is_cuda()) {
                 cuda_ops::cuda_free(this->data);
             } else
 #endif
@@ -295,7 +295,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
             this->data = other.data;
             stride = other.stride;
             owns_data = other.owns_data;
-            device = other.device;
+            this->current_device = other.device();
     
             other.data = nullptr;
             other.stride = nullptr;
@@ -309,7 +309,7 @@ Tensor<T>& Tensor<T>::operator=(Tensor<T>&& other) {
 template <Numeric T>
 Tensor<T>& Tensor<T>::operator=(const T& value) {
 #ifdef __NVCC__
-    if (device == Device::GPU) {
+    if (this->is_cuda()) {
         cuda_ops::launch_tensor_fill(data, value, this->length());
     } else
 #endif
@@ -328,7 +328,7 @@ template <Numeric U>
 Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
     if(owns_data) {
 #ifdef __NVCC__
-        if (device == Device::GPU) {
+        if (this->is_cuda()) {
             cuda_ops::cuda_free(this->data);
         } else
 #endif
@@ -340,7 +340,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
         this->sh = other.shape();
         
 #ifdef __NVCC__
-        if (device == Device::GPU) {
+        if (this->is_cuda()) {
             this->data = cuda_ops::cuda_malloc<T>(this->length());
         } else
 #endif
@@ -357,7 +357,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
     if(other.is_scalar()) {
         T scalar_value;
 #ifdef __NVCC__
-        if (other.device == Device::GPU) {
+        if (other.is_cuda()) {
             U gpu_scalar;
             cuda_ops::cuda_memcpy_device_to_host(&gpu_scalar, other.data, 1);
             scalar_value = static_cast<T>(gpu_scalar);
@@ -368,7 +368,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
         }
         
 #ifdef __NVCC__
-        if (device == Device::GPU) {
+        if (this->is_cuda()) {
             cuda_ops::launch_tensor_fill(this->data, scalar_value, this->length());
         } else
 #endif
@@ -380,13 +380,13 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
         }
     } else {
 #ifdef __NVCC__
-        if (device == Device::GPU && other.device == Device::GPU) {
+        if (this->is_cuda() && other.is_cuda()) {
             if constexpr (std::is_same_v<T, U>) {
                 cuda_ops::cuda_memcpy_device_to_device(this->data, other.data, this->length());
             } else {
                 cuda_ops::launch_tensor_type_convert(other.data, this->data, this->length());
             }
-        } else if (device == Device::GPU && other.device == Device::CPU) {
+        } else if (this->is_cuda() && !other.is_cuda()) {
             if constexpr (std::is_same_v<T, U>) {
                 cuda_ops::cuda_memcpy_host_to_device(this->data, other.data, this->length());
             } else {
@@ -398,7 +398,7 @@ Tensor<T>& Tensor<T>::operator=(const Tensor<U>& other) {
                 cuda_ops::cuda_memcpy_host_to_device(this->data, temp_data, this->length());
                 delete[] temp_data;
             }
-        } else if (device == Device::CPU && other.device == Device::GPU) {
+        } else if (!this->is_cuda() && other.is_cuda()) {
             if constexpr (std::is_same_v<T, U>) {
                 cuda_ops::cuda_memcpy_device_to_host(this->data, other.data, this->length());
             } else {
@@ -429,7 +429,7 @@ Tensor<T>& Tensor<T>::operator=(const U& scalar) {
     const T converted_scalar = static_cast<T>(scalar);
     
 #ifdef __NVCC__
-    if (device == Device::GPU) {
+    if (this->is_cuda()) {
         cuda_ops::launch_tensor_fill(data, converted_scalar, this->length());
     } else
 #endif

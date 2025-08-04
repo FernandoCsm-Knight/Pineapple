@@ -32,54 +32,44 @@ void cuda_memcpy_device_to_device(T* dst, const T* src, size_t size) {
 
 template<typename T, typename U, typename R>
 void launch_tensor_add(const T* a, const U* b, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
 
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) + static_cast<R>(y); };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_subtract(const T* a, const U* b, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
 
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) - static_cast<R>(y); };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
-    
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
-}
 
-template<typename T, typename U, typename R>
+    CUDA_CHECK(cudaGetLastError());
+}template<typename T, typename U, typename R>
 void launch_tensor_multiply(const T* a, const U* b, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
 
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) * static_cast<R>(y); };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_divide(const T* a, const U* b, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) / static_cast<R>(y); };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
@@ -89,9 +79,8 @@ void launch_tensor_broadcast(
     const int* result_strides, const int* shape,
     size_t total_elements, int ndim, int operation
 ) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(total_elements, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(total_elements, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_broadcast_kernel<<<grid, block>>>(
         a, b, result, a_strides, b_strides, result_strides,
@@ -99,267 +88,227 @@ void launch_tensor_broadcast(
     );
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_copy(const T* src, T* dst, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_copy_kernel<<<grid, block>>>(src, dst, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_type_convert(const U* src, T* dst, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_type_convert_kernel<<<grid, block>>>(src, dst, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_fill(T* data, T value, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_fill_kernel<<<grid, block>>>(data, value, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_scalar_add(const T* a, U scalar, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) + static_cast<R>(y); };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_scalar_subtract(const T* a, U scalar, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) - static_cast<R>(y); };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_scalar_multiply(const T* a, U scalar, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) * static_cast<R>(y); };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
 void launch_tensor_scalar_divide(const T* a, U scalar, R* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> R { return static_cast<R>(x) / static_cast<R>(y); };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_add(T* a, const U* b, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x += static_cast<T>(y); };
     tensor_inplace_elementwise_kernel<<<grid, block>>>(a, b, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_subtract(T* a, const U* b, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
 
     auto op = [] __device__ (T& x, const U& y) { x -= static_cast<T>(y); };
     tensor_inplace_elementwise_kernel<<<grid, block>>>(a, b, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_multiply(T* a, const U* b, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x *= static_cast<T>(y); };
     tensor_inplace_elementwise_kernel<<<grid, block>>>(a, b, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_divide(T* a, const U* b, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x /= static_cast<T>(y); };
     tensor_inplace_elementwise_kernel<<<grid, block>>>(a, b, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_scalar_add(T* a, U scalar, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x += static_cast<T>(y); };
     tensor_inplace_scalar_kernel<<<grid, block>>>(a, scalar, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_scalar_subtract(T* a, U scalar, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x -= static_cast<T>(y); };
     tensor_inplace_scalar_kernel<<<grid, block>>>(a, scalar, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_scalar_multiply(T* a, U scalar, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x *= static_cast<T>(y); };
     tensor_inplace_scalar_kernel<<<grid, block>>>(a, scalar, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_inplace_scalar_divide(T* a, U scalar, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (T& x, const U& y) { x /= static_cast<T>(y); };
     tensor_inplace_scalar_kernel<<<grid, block>>>(a, scalar, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_abs(const T* a, T* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_abs_kernel<<<grid, block>>>(a, result, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_pow(const T* a, T* result, double exponent, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_pow_kernel<<<grid, block>>>(a, result, exponent, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_normalize(const T* a, T* result, T min_val, T max_val, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_normalize_kernel<<<grid, block>>>(a, result, min_val, max_val, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_transpose(const T* a, T* result, int rows, int cols) {
-    dim3 block(16, 16);
-    dim3 grid((cols + block.x - 1) / block.x, (rows + block.y - 1) / block.y);
+    // Optimized block size for transpose operations
+    const dim3 block(32, 32);  // Increased from 16x16 for better occupancy
+    const dim3 grid((cols + block.x - 1) / block.x, (rows + block.y - 1) / block.y);
     
     tensor_transpose_kernel<<<grid, block>>>(a, result, rows, cols);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_flip(const T* a, T* result, const int* shape, const int* axes,
                        const int* strides, const int* result_strides,
                        int ndim, int num_axes, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_flip_kernel<<<grid, block>>>(a, result, shape, axes, strides, result_strides, ndim, num_axes, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 T launch_tensor_min(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
-    
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+
     T* d_result;
-    CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(T)));
-    
-    tensor_min_kernel<<<grid_size, block_size, block_size * sizeof(T)>>>(data, d_result, size);
+    CUDA_CHECK(cudaMalloc(&d_result, grid.x * sizeof(T)));
+
+    tensor_min_kernel<<<grid, BLOCK_SIZE, BLOCK_SIZE * sizeof(T)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
-    
-    if(grid_size > 1) {
-        T result = launch_tensor_min(d_result, grid_size);
+
+    if(grid.x > 1) {
+        T result = launch_tensor_min(d_result, grid.x);
         CUDA_CHECK(cudaFree(d_result));
         return result;
     } else {
@@ -372,17 +321,16 @@ T launch_tensor_min(const T* data, size_t size) {
 
 template<typename T>
 T launch_tensor_max(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
-    
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+
     T* d_result;
-    CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(T)));
+    CUDA_CHECK(cudaMalloc(&d_result, grid.x * sizeof(T)));
     
-    tensor_max_kernel<<<grid_size, block_size, block_size * sizeof(T)>>>(data, d_result, size);
+    tensor_max_kernel<<<grid.x, BLOCK_SIZE, BLOCK_SIZE * sizeof(T)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
-    if(grid_size > 1) {
-        T result = launch_tensor_max(d_result, grid_size);
+    if(grid.x > 1) {
+        T result = launch_tensor_max(d_result, grid.x);
         CUDA_CHECK(cudaFree(d_result));
         return result;
     } else {
@@ -395,17 +343,16 @@ T launch_tensor_max(const T* data, size_t size) {
 
 template<typename T>
 T launch_tensor_sum(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
-    
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+
     T* d_result;
-    CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(T)));
+    CUDA_CHECK(cudaMalloc(&d_result, grid.x * sizeof(T)));
     
-    tensor_sum_kernel<<<grid_size, block_size, block_size * sizeof(T)>>>(data, d_result, size);
+    tensor_sum_kernel<<<grid.x, BLOCK_SIZE, BLOCK_SIZE * sizeof(T)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
-    if(grid_size > 1) {
-        T result = launch_tensor_sum(d_result, grid_size);
+    if(grid.x > 1) {
+        T result = launch_tensor_sum(d_result, grid.x);
         CUDA_CHECK(cudaFree(d_result));
         return result;
     } else {
@@ -416,20 +363,34 @@ T launch_tensor_sum(const T* data, size_t size) {
     }
 }
 
+// Wrapper para soma ao longo de um axis específico
+template<typename T>
+void launch_tensor_sum_axis(const T* data, T* result, 
+                           const int* shape, const int* strides,
+                           const int* result_strides, int axis,
+                           int ndim, size_t result_size) {
+    const dim3 grid = calculate_grid_block(result_size, BLOCK_SIZE);
+    
+    tensor_sum_axis_kernel<<<grid, BLOCK_SIZE>>>(
+        data, result, shape, strides, result_strides, 
+        axis, ndim, result_size
+    );
+    CUDA_CHECK(cudaGetLastError());
+}
+
 template<typename T>
 T launch_tensor_norm(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
-    
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+
     T* d_result;
-    CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(T)));
+    CUDA_CHECK(cudaMalloc(&d_result, grid.x * sizeof(T)));
     
-    tensor_norm_squared_kernel<<<grid_size, block_size, block_size * sizeof(T)>>>(data, d_result, size);
+    tensor_norm_squared_kernel<<<grid.x, BLOCK_SIZE, BLOCK_SIZE * sizeof(T)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
     T sum_of_squares;
-    if(grid_size > 1) {
-        sum_of_squares = launch_tensor_sum(d_result, grid_size);
+    if(grid.x > 1) {
+        sum_of_squares = launch_tensor_sum(d_result, grid.x);
     } else {
         CUDA_CHECK(cudaMemcpy(&sum_of_squares, d_result, sizeof(T), cudaMemcpyDeviceToHost));
     }
@@ -440,20 +401,19 @@ T launch_tensor_norm(const T* data, size_t size) {
 
 template<typename T>
 T launch_tensor_variance(const T* data, T mean_val, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
-    
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+
     T* d_result;
-    CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(T)));
+    CUDA_CHECK(cudaMalloc(&d_result, grid.x * sizeof(T)));
     
-    tensor_variance_kernel<<<grid_size, block_size, block_size * sizeof(T)>>>(data, mean_val, d_result, size);
+    tensor_variance_kernel<<<grid.x, BLOCK_SIZE, BLOCK_SIZE * sizeof(T)>>>(data, mean_val, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
-    T* h_result = new T[grid_size];
-    CUDA_CHECK(cudaMemcpy(h_result, d_result, grid_size * sizeof(T), cudaMemcpyDeviceToHost));
+    T* h_result = new T[grid.x];
+    CUDA_CHECK(cudaMemcpy(h_result, d_result, grid.x * sizeof(T), cudaMemcpyDeviceToHost));
     
     T final_var = T(0);
-    for(int i = 0; i < grid_size; i++) {
+    for(int i = 0; i < grid.x; i++) {
         final_var += h_result[i];
     }
     
@@ -465,254 +425,215 @@ T launch_tensor_variance(const T* data, T mean_val, size_t size) {
 
 template<typename T>
 void launch_tensor_slice(const T* data, T* result, int start, int step, size_t new_size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(new_size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(new_size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_slice_kernel<<<grid, block>>>(data, result, start, step, new_size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_sqrt(const T* data, T* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_sqrt_kernel<<<grid, block>>>(data, result, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_equal(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x == y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_not_equal(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x != y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_less_than(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x < y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_less_equal(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x <= y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_greater_than(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x > y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_greater_equal(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x >= y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_equal(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x == y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_not_equal(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x != y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_less_than(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x < y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_less_equal(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x <= y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_greater_than(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x > y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_greater_equal(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x >= y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_logical_and(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x && y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_logical_or(const T* a, const U* b, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x || y; };
     tensor_elementwise_kernel<<<grid, block>>>(a, b, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_logical_and(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x && y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U>
 void launch_tensor_scalar_logical_or(const T* a, U scalar, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     auto op = [] __device__ (const T& x, const U& y) -> bool { return x || y; };
     tensor_scalar_kernel<<<grid, block>>>(a, scalar, result, size, op);
 
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 void launch_tensor_logical_not(const T* a, bool* result, size_t size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_logical_not_kernel<<<grid, block>>>(a, result, size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
 bool launch_tensor_any(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
+    const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
     
     bool* d_result;
     CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(bool)));
     
-    tensor_any_kernel<<<grid_size, block_size, block_size * sizeof(bool)>>>(data, d_result, size);
+    tensor_any_kernel<<<grid_size, BLOCK_SIZE, BLOCK_SIZE * sizeof(bool)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
     bool* h_result = new bool[grid_size];
@@ -734,13 +655,12 @@ bool launch_tensor_any(const T* data, size_t size) {
 
 template<typename T>
 bool launch_tensor_all(const T* data, size_t size) {
-    const int block_size = 256;
-    const int grid_size = (size + block_size - 1) / block_size;
+    const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
     
     bool* d_result;
     CUDA_CHECK(cudaMalloc(&d_result, grid_size * sizeof(bool)));
     
-    tensor_all_kernel<<<grid_size, block_size, block_size * sizeof(bool)>>>(data, d_result, size);
+    tensor_all_kernel<<<grid_size, BLOCK_SIZE, BLOCK_SIZE * sizeof(bool)>>>(data, d_result, size);
     CUDA_CHECK(cudaGetLastError());
     
     bool* h_result = new bool[grid_size];
@@ -766,15 +686,13 @@ void launch_tensor_dilate(const T* input, T* output,
                          const int* input_strides, const int* output_strides,
                          const int* axes, int num_axes, int dilation_size,
                          int ndim, size_t output_size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(output_size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(output_size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_dilate_kernel<<<grid, block>>>(input, output, input_shape, output_shape,
                                          input_strides, output_strides, axes, num_axes,
                                          dilation_size, ndim, output_size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T>
@@ -783,15 +701,13 @@ void launch_tensor_pad(const T* input, T* output,
                       const int* input_strides, const int* output_strides,
                       const int* axes, int num_axes, int pad_size,
                       int ndim, size_t output_size) {
-    const int block_size = 256;
-    dim3 grid = calculate_grid_block(output_size, block_size);
-    dim3 block(block_size);
+    const dim3 grid = calculate_grid_block(output_size, BLOCK_SIZE);
+    const dim3 block(BLOCK_SIZE);
     
     tensor_pad_kernel<<<grid, block>>>(input, output, input_shape, output_shape,
                                       input_strides, output_strides, axes, num_axes,
                                       pad_size, ndim, output_size);
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template<typename T, typename U, typename R>
@@ -800,29 +716,29 @@ void launch_tensor_dot(const T* a, const U* b, R* result,
                                int result_rows, int result_cols,
                                bool a_is_vector, bool b_is_vector) {
     if(a_is_vector && b_is_vector) {
-        dim3 block(1, 1);
-        dim3 grid(1, 1);
+        const dim3 block(1, 1);
+        const dim3 grid(1, 1);
         tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
                                           result_rows, result_cols, a_is_vector, b_is_vector);
     } else if(a_is_vector && !b_is_vector) {
-        dim3 block(16, 1);
-        dim3 grid((result_cols + block.x - 1) / block.x, 1);
+        const dim3 block(32, 1);  // Increased block size for better occupancy
+        const dim3 grid((result_cols + block.x - 1) / block.x, 1);
         tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
                                           result_rows, result_cols, a_is_vector, b_is_vector);
     } else if(!a_is_vector && b_is_vector) {
-        dim3 block(1, 16);
-        dim3 grid(1, (result_rows + block.y - 1) / block.y);
+        const dim3 block(1, 32);  // Increased block size for better occupancy
+        const dim3 grid(1, (result_rows + block.y - 1) / block.y);
         tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
                                           result_rows, result_cols, a_is_vector, b_is_vector);
     } else {
-        dim3 block(16, 16);
-        dim3 grid((result_cols + block.x - 1) / block.x, (result_rows + block.y - 1) / block.y);
+        // Optimized block size for matrix multiplication
+        const dim3 block(32, 32);  // Increased from 16x16 for better occupancy
+        const dim3 grid((result_cols + block.x - 1) / block.x, (result_rows + block.y - 1) / block.y);
         tensor_dot_kernel<<<grid, block>>>(a, b, result, a_rows, a_cols, b_rows, b_cols,
                                           result_rows, result_cols, a_is_vector, b_is_vector);
     }
     
     CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 // Explicit instantiations
@@ -1085,6 +1001,11 @@ template double launch_tensor_max<double>(const double*, size_t);
 template float launch_tensor_sum<float>(const float*, size_t);
 template int launch_tensor_sum<int>(const int*, size_t);
 template double launch_tensor_sum<double>(const double*, size_t);
+
+// Sum axis instantiations
+template void launch_tensor_sum_axis<float>(const float*, float*, const int*, const int*, const int*, int, int, size_t);
+template void launch_tensor_sum_axis<int>(const int*, int*, const int*, const int*, const int*, int, int, size_t);
+template void launch_tensor_sum_axis<double>(const double*, double*, const int*, const int*, const int*, int, int, size_t);
 
 template float launch_tensor_norm<float>(const float*, size_t);
 template double launch_tensor_norm<double>(const double*, size_t);

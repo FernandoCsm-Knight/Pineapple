@@ -3,39 +3,61 @@
 
 #include "../../inc/loss/huber_loss.hpp"
 
+#ifdef __NVCC__
+#include "../../inc/device/loss_cuda_wrappers.hpp"
+#endif
+
 template <Numeric T>
 T HuberLoss<T>::compute(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     T loss = 0;
     const int batch_size = predictions.shape(0);
-    
-    #pragma omp parallel for reduction(+:loss)
-    for(int i = 0; i < batch_size; ++i) {
-        const T diff = std::abs(predictions(i, 0).value() - targets[i]);
-        
-        if(diff < delta) {
-            loss += 0.5 * diff * diff;
-        } else {
-            loss += delta * (diff - 0.5 * delta);
+
+#ifdef __NVCC__
+    if(predictions.is_cuda() && targets.is_cuda()) {
+        loss = cuda_loss_ops::launch_huber_compute<T>(predictions.data_ptr(), targets.data_ptr(), delta, batch_size);
+    } else
+#endif
+    {
+        #pragma omp parallel for reduction(+:loss)
+        for(int i = 0; i < batch_size; ++i) {
+            const T diff = std::abs(predictions(i, 0).value() - targets[i]);
+            
+            if(diff < delta) {
+                loss += 0.5 * diff * diff;
+            } else {
+                loss += delta * (diff - 0.5 * delta);
+            }
         }
-    }
+
+        loss /= batch_size;
+    }    
+
     
-    return loss / batch_size;
+    return loss;
 }
 
 template <Numeric T>
 Tensor<T> HuberLoss<T>::gradient(const Tensor<T>& predictions, const Tensor<T>& targets) const {
     Tensor<T> grad(predictions.shape());
+    grad.to(predictions.device());
     const int batch_size = predictions.shape(0);
     
-    #pragma omp parallel for
-    for (int i = 0; i < batch_size; ++i) {
-        const T diff = predictions(i, 0).value() - targets[i];
-        const T abs_diff = std::abs(diff);
-        
-        if (abs_diff < delta) {
-            grad(i, 0) = diff / batch_size;
-        } else {
-            grad(i, 0) = delta * (diff > 0 ? 1 : -1) / batch_size;
+#ifdef __NVCC__
+    if(predictions.is_cuda() && targets.is_cuda()) {
+        cuda_loss_ops::launch_huber_gradient<T>(predictions.data_ptr(), targets.data_ptr(), grad.data_ptr(), delta, batch_size);
+    } else 
+#endif
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < batch_size; ++i) {
+            const T diff = predictions(i, 0).value() - targets[i];
+            const T abs_diff = std::abs(diff);
+            
+            if (abs_diff < delta) {
+                grad(i, 0) = diff / batch_size;
+            } else {
+                grad(i, 0) = delta * (diff > 0 ? 1 : -1) / batch_size;
+            }
         }
     }
     

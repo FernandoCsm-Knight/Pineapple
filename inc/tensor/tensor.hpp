@@ -14,15 +14,15 @@
 #include "../types/numeric.hpp"
 #include "../types/device.hpp"
 #include "../abstract/shapeable.hpp"
+#include "../../inc/abstract/support_device.hpp"
 
-template <Numeric T> class Tensor: public Shapeable {
+template <Numeric T> class Tensor: public Shapeable, public SupportDevice {
     template <Numeric> friend class Tensor;
 
     private:
         T* data = nullptr;
         int* stride = nullptr;
         bool owns_data = true;
-        Device device = Device::CPU;
 
         // Private methods
 
@@ -303,9 +303,7 @@ template <Numeric T> class Tensor: public Shapeable {
 
         // Device management
         
-        void to(Device target_device);
-        Device get_device() const;
-        bool is_cuda() const;
+        void to(Device target_device) override;
 
         // Formatted tensors
 
