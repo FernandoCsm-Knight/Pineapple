@@ -81,7 +81,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
         }
         
         if ((epoch + 1) % 10 == 0 || epoch == 0) {
-            std::cout << "Época " << (epoch + 1) << ", Train Loss: " << (total_loss / train_loader.num_batches());
+            std::cout << "Epoch " << (epoch + 1) << ", Train Loss: " << (total_loss / train_loader.num_batches());
         
             if(metrics) {
                 std::set<std::string> all_metrics = metrics->all_metrics();
@@ -108,7 +108,7 @@ void NeuralNetwork<T>::train(const Tensor<T>& X, const Tensor<T>& y, int epochs,
             }
 
             if((epoch + 1) % 10 == 0 || epoch == 0) {
-                std::cout << "Época " << (epoch + 1) << ", Validation Loss: " << (total_loss / validation_loader.num_batches());
+                std::cout << "Epoch " << (epoch + 1) << ", Validation Loss: " << (total_loss / validation_loader.num_batches());
                 
                 if(metrics) {
                     std::set<std::string> all_metrics = metrics->all_metrics();

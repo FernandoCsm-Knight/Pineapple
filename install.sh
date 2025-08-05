@@ -8,7 +8,7 @@ set -e  # Exit on error
 
 # Configuration
 LIBRARY_NAME="pineapple"
-VERSION="0.3.0"
+VERSION="0.3.2"
 PREFIX="${PREFIX:-/usr/local}"
 INCLUDEDIR="$PREFIX/include"
 PKGCONFIGDIR="$PREFIX/lib/pkgconfig"

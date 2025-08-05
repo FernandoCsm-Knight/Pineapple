@@ -1,6 +1,6 @@
 # Installing Pineapple Library
 
-This document explains how to install the Pineapple library on your Linux system.
+This document explains how to install the Pineapple library on your **Linux** system.
 
 ## Quick Installation
 
